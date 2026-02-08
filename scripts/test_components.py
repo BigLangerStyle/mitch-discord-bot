@@ -64,6 +64,15 @@ def test_config_file():
     
     try:
         import yaml
+    except ImportError:
+        print_test(
+            "Config file check",
+            False,
+            "PyYAML not installed (run: pip install -r requirements.txt)"
+        )
+        return
+    
+    try:
         with open(config_path) as f:
             config = yaml.safe_load(f)
         
@@ -98,6 +107,15 @@ def test_discord_token():
     """Test that Discord token is configured (basic validation)."""
     try:
         import yaml
+    except ImportError:
+        print_test(
+            "Discord token check",
+            False,
+            "PyYAML not installed (run: pip install -r requirements.txt)"
+        )
+        return
+    
+    try:
         with open("config/config.yaml") as f:
             config = yaml.safe_load(f)
         
@@ -119,6 +137,12 @@ def test_discord_token():
         else:
             print_test("Discord token configured", True)
             
+    except FileNotFoundError:
+        print_test(
+            "Discord token check",
+            False,
+            "config/config.yaml not found"
+        )
     except Exception as e:
         print_test(
             "Discord token check",
@@ -172,17 +196,19 @@ def test_required_directories():
 
 def test_dependencies():
     """Test that required Python packages are installed."""
-    required_packages = {
-        'discord': 'discord.py',
-        'yaml': 'PyYAML',
-    }
-    
     missing = []
-    for package, name in required_packages.items():
-        try:
-            __import__(package)
-        except ImportError:
-            missing.append(name)
+    
+    # Test discord.py
+    try:
+        import discord
+    except ImportError:
+        missing.append('discord.py')
+    
+    # Test PyYAML
+    try:
+        import yaml
+    except ImportError:
+        missing.append('PyYAML')
     
     if missing:
         print_test(
