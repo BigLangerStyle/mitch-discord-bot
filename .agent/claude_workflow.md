@@ -90,6 +90,103 @@ git commit -m "Add Discord bot skeleton
 
 ---
 
+## Config Files & Secrets Management (Critical Security Pattern)
+
+**Problem:** Config files contain sensitive information (Discord tokens, API keys, database paths) that must NEVER be committed to git, but need to be updated as the project evolves.
+
+**Solution:** A two-file pattern with secure transfer for deployment.
+
+### The Two-File Pattern
+
+**1. `config/config.yaml.example` (tracked in git)**
+- Template with placeholder values
+- Safe to commit to GitHub
+- Shows structure and required fields
+- Gets updated when new config options are added
+
+**2. `config/config.yaml` (in .gitignore, NEVER committed)**
+- Contains real tokens and secrets
+- Created by copying .example file
+- User fills in actual values
+- Transferred to MediaServer via WinSCP (not git)
+
+### Files That Must Be in .gitignore
+
+Add these to `.gitignore`:
+```
+# Secrets and sensitive data
+config/config.yaml
+*.env
+.env.*
+
+# Runtime data
+data/
+*.db
+*.log
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+```
+
+### Workflow for Config Updates
+
+**When Claude adds new config options:**
+
+1. Update `config/config.yaml.example` with new fields and placeholder values
+2. Provide the user with an updated `config/config.yaml` file directly (via present_files)
+3. User saves `config.yaml` locally (NOT committed to git)
+4. User uses WinSCP to transfer to MediaServer at `~/mitch-discord-bot/config/config.yaml`
+
+**Example workflow:**
+```
+Claude: "I've added a new 'ollama.timeout' config option. Here are the updated files:"
+
+Files to commit to git:
+- config/config.yaml.example → (has placeholder: timeout: 60)
+- src/ollama_client.py → (uses the new config option)
+
+Files to transfer via WinSCP (NOT git):
+- config/config.yaml → (has your real token + new timeout: 60)
+
+Git commit message:
+git commit -m "Add Ollama timeout configuration
+
+- Add ollama.timeout to config schema
+- Update config.yaml.example with new field
+- Update ollama_client.py to use timeout setting"
+
+Transfer to MediaServer:
+1. Save config/config.yaml locally
+2. Open WinSCP, connect to MediaServer
+3. Navigate to ~/mitch-discord-bot/config/
+4. Upload config.yaml (overwrites existing)
+```
+
+### What Claude Must NEVER Do
+
+- ❌ Ask to see the user's `config/config.yaml` (it has secrets)
+- ❌ Suggest committing `config/config.yaml` to git
+- ❌ Include real tokens/secrets in any file that goes to GitHub
+- ❌ Ask the user to paste their Discord token in chat
+
+### What Claude SHOULD Do
+
+- ✅ Always update both `.example` and actual `config.yaml`
+- ✅ Use clear placeholder values in `.example` (e.g., `YOUR_DISCORD_BOT_TOKEN_HERE`)
+- ✅ Remind user to transfer via WinSCP if config changed
+- ✅ Verify `.gitignore` includes `config/config.yaml`
+
+### Other Files That Follow This Pattern
+
+This same pattern applies to:
+- `data/mitch.db` (SQLite database - created at runtime, not committed)
+- `data/*.log` (log files - not committed)
+- Any future API keys or secrets
+---
+
 ## Coach Mode Contract
 
 Claude, you must behave like a guided checklist.
