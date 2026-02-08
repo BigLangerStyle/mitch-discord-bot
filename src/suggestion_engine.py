@@ -74,7 +74,7 @@ class SuggestionEngine:
             logger.warning("Game library is empty")
             return (
                 "hey your game library is empty! "
-                "run 'python scripts/setup_games.py populate' to add some games"
+                "run 'python3 scripts/setup_games.py populate' to add some games"
             )
         
         # Filter games by player count and cooldown
