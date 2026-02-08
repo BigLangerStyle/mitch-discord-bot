@@ -30,39 +30,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# Sample game library - customize this for your gaming group!
+# Your gaming group's library - customize player counts and tags as needed!
 GAMES = [
-    # Co-op Horror
-    {
-        "name": "Phasmophobia",
-        "min": 1,
-        "max": 4,
-        "category": "co-op",
-        "tags": ["horror", "investigation", "voice-chat"]
-    },
-    {
-        "name": "Lethal Company",
-        "min": 1,
-        "max": 4,
-        "category": "co-op",
-        "tags": ["horror", "comedy", "survival"]
-    },
-    {
-        "name": "Content Warning",
-        "min": 1,
-        "max": 4,
-        "category": "co-op",
-        "tags": ["horror", "comedy", "found-footage"]
-    },
-    
-    # Co-op Survival/Building
-    {
-        "name": "Valheim",
-        "min": 1,
-        "max": 10,
-        "category": "co-op",
-        "tags": ["survival", "building", "viking"]
-    },
+    # Co-op Survival/Mining
     {
         "name": "Deep Rock Galactic",
         "min": 1,
@@ -71,87 +41,75 @@ GAMES = [
         "tags": ["shooter", "mining", "dwarves"]
     },
     {
-        "name": "Stardew Valley",
-        "min": 1,
-        "max": 4,
-        "category": "co-op",
-        "tags": ["farming", "chill", "rpg"]
-    },
-    {
-        "name": "Terraria",
+        "name": "Return To Moria",
         "min": 1,
         "max": 8,
         "category": "co-op",
-        "tags": ["survival", "building", "2d"]
+        "tags": ["survival", "mining", "crafting", "lotr"]
     },
     
-    # Party Games
+    # Co-op Horror
     {
-        "name": "Overcooked 2",
+        "name": "Lethal Company",
         "min": 1,
         "max": 4,
-        "category": "party",
-        "tags": ["cooking", "chaotic", "couch"]
+        "category": "co-op",
+        "tags": ["horror", "comedy", "survival"]
     },
     {
-        "name": "Among Us",
-        "min": 4,
-        "max": 15,
-        "category": "party",
-        "tags": ["social-deduction", "casual"]
-    },
-    {
-        "name": "Jackbox Party Pack",
-        "min": 3,
-        "max": 8,
-        "category": "party",
-        "tags": ["trivia", "drawing", "casual"]
+        "name": "Escape The Backrooms",
+        "min": 1,
+        "max": 4,
+        "category": "co-op",
+        "tags": ["horror", "exploration", "backrooms"]
     },
     
-    # Competitive
+    # Co-op Action/Adventure
     {
-        "name": "Rocket League",
+        "name": "R.E.P.O.",
+        "min": 1,
+        "max": 4,
+        "category": "co-op",
+        "tags": ["action", "sci-fi"]
+    },
+    {
+        "name": "TMNT: Splintered Fate",
+        "min": 1,
+        "max": 4,
+        "category": "co-op",
+        "tags": ["action", "roguelike", "tmnt"]
+    },
+    
+    # Party/Casual
+    {
+        "name": "RV There Yet?",
         "min": 2,
-        "max": 8,
-        "category": "competitive",
-        "tags": ["sports", "cars", "skilled"]
+        "max": 4,
+        "category": "party",
+        "tags": ["casual", "driving", "chaotic"]
     },
     {
-        "name": "League of Legends",
-        "min": 5,
-        "max": 10,
-        "category": "competitive",
-        "tags": ["moba", "strategy", "ranked"]
-    },
-    {
-        "name": "Counter-Strike 2",
+        "name": "Liar's Bar",
         "min": 2,
-        "max": 10,
-        "category": "competitive",
-        "tags": ["fps", "tactical", "ranked"]
+        "max": 4,
+        "category": "party",
+        "tags": ["bluffing", "cards", "social"]
+    },
+    {
+        "name": "PEAK",
+        "min": 2,
+        "max": 4,
+        "category": "party",
+        "tags": ["climbing", "physics", "challenging"]
     },
     
-    # Co-op Action
+    # Challenging Co-op
     {
-        "name": "Left 4 Dead 2",
-        "min": 1,
+        "name": "Chained Together",
+        "min": 2,
         "max": 4,
         "category": "co-op",
-        "tags": ["zombie", "shooter", "campaign"]
-    },
-    {
-        "name": "Payday 2",
-        "min": 1,
-        "max": 4,
-        "category": "co-op",
-        "tags": ["heist", "shooter", "stealth"]
-    },
-    {
-        "name": "Risk of Rain 2",
-        "min": 1,
-        "max": 4,
-        "category": "co-op",
-        "tags": ["roguelike", "shooter", "challenging"]
+        "tags": ["platformer", "challenging", "physics"]
     },
 ]
 
