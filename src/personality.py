@@ -44,13 +44,21 @@ Let me recommend something for your crew size
 
 Remember: You're texting a friend. Super casual. No quotes. No exclamation marks unless actually excited."""
 
-# Fallback responses if AI is unavailable
+# Fallback responses if AI is unavailable or too formal
 CASUAL_RESPONSES = [
     "yo what's up?",
-    "hey, not sure what to suggest yet - still learning what you guys like to play",
-    "hmm I'd help but I'm still getting the hang of this",
-    "sup, what kind of game are you thinking?",
-    "hey! what's the vibe - competitive or chill?"
+    "hey, not sure what to suggest yet",
+    "hmm tough call",
+    "sup, what kind of game you thinking?",
+    "idk what's the vibe?"
+]
+
+# Simple game suggestion fallbacks (used by suggestion engine)
+SUGGESTION_FALLBACKS = [
+    "hmm maybe {game}?",
+    "how about {game}",
+    "try {game}?",
+    "{game} could work",
 ]
 
 # Corporate phrases to strip from AI responses
@@ -82,13 +90,21 @@ CORPORATE_PHRASES = [
     r"check out",
     r"checking out",
     r"give .+ a try",
-    r"why not try",
+    r"why not\??",
     r"since you",
+    r"since [a-z]",
     r"offers? a",
-    r"without guns",
+    r"without .+ing",
     r"for a twisted",
-    r"that sci-fi touch",
+    r"that .+ touch",
     r"with its .+ concept",
+    r"I just found",
+    r"it epic",
+    r"pretty cool",
+    r"Plus,",
+    r"so why not",
+    r"let's go with",
+    r"Just picked up",
 ]
 
 # Overly enthusiastic phrases to remove
@@ -103,11 +119,17 @@ ENTHUSIASM_PHRASES = [
     r"ready for some gaming fun",
 ]
 
-# Patterns that indicate the AI is being too formal/descriptive
+# Patterns that indicate the AI is being too chatty/descriptive
 FORMALITY_INDICATORS = [
     r"hey \w+,",  # "hey Brad," or "hey [name],"
     r"since you",
-    r"haven't played .+ lately",
+    r"since [a-z]",
+    r"haven't played",
+    r"no recent",
+    r"just picked up",
+    r"I just found",
+    r"it epic",
+    r"pretty cool",
     r"offers? a (?:fresh|new|unique|different)",
     r"take on",
     r"without .+ing",
@@ -117,6 +139,10 @@ FORMALITY_INDICATORS = [
     r"a bit scared",
     r"want to game",
     r"checking in",
+    r"Plus[,.]",
+    r"so why not",
+    r"let's go with",
+    r"\. [A-Z]",  # Sentence starting mid-response (too chatty)
 ]
 
 
@@ -155,9 +181,9 @@ class PersonalitySystem:
             # Polish the response to keep it casual
             polished = self._polish_response(raw_response)
             
-            # Check if response is still too formal after polishing
+            # Check if response is still too formal/chatty after polishing
             if self._is_too_formal(polished):
-                logger.warning(f"Response still too formal after polishing: {polished[:50]}...")
+                logger.warning(f"Response too formal/chatty: {polished[:60]}... using fallback")
                 return self._get_fallback_response()
             
             logger.info(f"Response generated: {len(polished)} chars")
@@ -227,10 +253,10 @@ class PersonalitySystem:
         response = re.sub(r'^["\'](.+)["\']$', r'\1', response)
         
         # Remove everything after certain markers (AI instruction artifacts)
-        response = re.split(r'---+', response)[0]  # Remove anything after "---"
-        response = re.split(r'\*\*Instruction', response)[0]  # Remove instruction artifacts
-        response = re.split(r'USER:', response, flags=re.IGNORECASE)[0]  # Remove if AI repeats prompt
-        response = re.split(r'MITCH:', response, flags=re.IGNORECASE)[0]  # Remove if AI repeats its name
+        response = re.split(r'---+', response)[0]
+        response = re.split(r'\*\*Instruction', response)[0]
+        response = re.split(r'USER:', response, flags=re.IGNORECASE)[0]
+        response = re.split(r'MITCH:', response, flags=re.IGNORECASE)[0]
         
         # Remove all emojis completely
         emoji_pattern = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002702-\U000027B0\U000024C2-\U0001F251\u2600-\u26FF\u2700-\u27BF]'
@@ -243,55 +269,40 @@ class PersonalitySystem:
         for phrase in CORPORATE_PHRASES + ENTHUSIASM_PHRASES:
             response = re.sub(phrase, "", response, flags=re.IGNORECASE)
         
-        # Remove common filler words and phrases at the start
+        # Remove common filler words at the start
         response = re.sub(r'^(?:Well,?|So,?|Hmm,?)\s+', '', response, flags=re.IGNORECASE)
         
-        # Reduce excessive exclamation marks (max 1)
+        # Reduce excessive exclamation marks
         response = re.sub(r'!+', '!', response)
         
         # Clean up excessive punctuation
-        response = re.sub(r'\?{2,}', '?', response)  # Multiple ? to single ?
-        response = re.sub(r'\.{4,}', '...', response)  # Multiple . to ...
-        response = re.sub(r'[!?]{2,}', '?', response)  # Mixed !? to just ?
-        
-        # Remove trailing punctuation repetition
+        response = re.sub(r'\?{2,}', '?', response)
+        response = re.sub(r'\.{4,}', '...', response)
+        response = re.sub(r'[!?]{2,}', '?', response)
         response = re.sub(r'([.!?])\1+$', r'\1', response)
         
         # Clean up whitespace
-        response = re.sub(r'\n\s*\n', '\n', response)  # Multiple blank lines
-        response = re.sub(r'  +', ' ', response)  # Multiple spaces
+        response = re.sub(r'\n\s*\n', '\n', response)
+        response = re.sub(r'  +', ' ', response)
         response = response.strip()
         
-        # If response has multiple sentences, try to keep only the first one or two
+        # If response has multiple sentences, keep only first
+        # This is aggressive but necessary to keep it brief
         sentences = re.split(r'(?<=[.!?])\s+', response)
-        if len(sentences) > 2:
-            # Keep first 2 sentences max
-            response = ' '.join(sentences[:2])
+        if len(sentences) > 1:
+            # Just keep the first sentence
+            response = sentences[0]
         
-        # Enforce strict length limits
-        # Discord limit is 2000, but we want to keep it very brief
-        if len(response) > 200:
-            # Try to cut at a sentence boundary
-            sentences = response[:200].split('.')
-            if len(sentences) > 1:
-                response = '.'.join(sentences[:-1]) + '.'
-            else:
-                # Cut at word boundary
-                response = response[:197] + '...'
-        
-        # If response is still too long/structured, simplify it
-        if len(response) > 100:
-            # Try to extract just the core message
-            # Look for questions or key phrases
+        # Enforce very strict length limit
+        if len(response) > 80:
+            # Try to cut at sentence boundary
             if '?' in response:
-                # Keep just the question
-                parts = response.split('?')
-                response = parts[0] + '?'
+                response = response.split('?')[0] + '?'
+            elif '.' in response:
+                response = response.split('.')[0]
             else:
-                # Take first sentence only
-                first_sentence = re.split(r'[.!]', response)[0]
-                if len(first_sentence) > 20:
-                    response = first_sentence
+                # Just truncate
+                response = response[:77] + '...'
         
         # Lowercase the first letter unless it's "I" or a proper noun
         if response and len(response) > 0:
@@ -304,51 +315,56 @@ class PersonalitySystem:
         
         # Final cleanup
         response = response.strip()
-        
-        # Remove any remaining quotes that slipped through
         response = response.strip('"\'')
         
-        # If we somehow ended up with empty response after polishing
+        # If we ended up with empty response after polishing
         if not response or len(response.strip()) < 3:
-            logger.warning("Response too short after polishing, using fallback")
+            logger.warning("Response too short after polishing")
             return self._get_fallback_response()
         
         return response
     
     def _is_too_formal(self, response: str) -> bool:
         """
-        Check if response is still too formal after polishing.
+        Check if response is still too formal/chatty after polishing.
+        
+        This is VERY strict - even slightly chatty responses get rejected.
         
         Args:
             response: Polished response text
             
         Returns:
-            True if response is too formal and should use fallback
+            True if response should be replaced with fallback
         """
         response_lower = response.lower()
         
-        # Check for formality indicators
-        for pattern in FORMALITY_INDICATORS:
-            if re.search(pattern, response_lower):
-                logger.debug(f"Formality detected: {pattern}")
-                return True
-        
-        # Check if response is too long (likely descriptive)
-        if len(response) > 150:
-            logger.debug(f"Response too long: {len(response)} chars")
+        # Reject if over 80 chars (too chatty)
+        if len(response) > 80:
+            logger.debug(f"Too long: {len(response)} chars")
             return True
         
-        # Check for multiple sentences (likely over-explaining)
-        sentence_count = len(re.split(r'[.!?]\s+', response))
-        if sentence_count > 2:
-            logger.debug(f"Too many sentences: {sentence_count}")
+        # Reject if has period mid-sentence (multiple thoughts)
+        if '. ' in response:
+            logger.debug("Multiple sentences detected")
+            return True
+        
+        # Check for formality/chattiness indicators
+        for pattern in FORMALITY_INDICATORS:
+            if re.search(pattern, response_lower):
+                logger.debug(f"Formality pattern: {pattern}")
+                return True
+        
+        # Reject common chatty words
+        chatty_words = ['just', 'pretty', 'really', 'actually', 'totally', 'definitely']
+        if any(word in response_lower for word in chatty_words):
+            logger.debug(f"Chatty word detected")
             return True
         
         return False
     
     def _get_fallback_response(self) -> str:
         """
-        Get a fallback response if AI fails.
+        Get a fallback response if AI fails or is too formal.
         
         Returns:
             Random casual response
