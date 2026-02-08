@@ -1,7 +1,7 @@
 # Mitch - Your Gaming Buddy Discord Bot
 
 **Version:** 1.0.0 ✅  
-**Status:** Production-Ready with AI Integration
+**Status:** Production-Ready with Database Integration
 
 ---
 
@@ -43,6 +43,9 @@ ollama pull phi3:mini
 cp config/config.yaml.example config/config.yaml
 nano config/config.yaml  # Add your Discord bot token
 
+# Setup game library
+python3 scripts/setup_games.py populate
+
 # Run
 ./run.sh
 ```
@@ -61,6 +64,8 @@ Mitch: hmm not sure what the vibe is - competitive or co-op?
 ## Features (v1.0.0)
 
 - ✅ **AI-Powered Responses**: Natural conversations using local Ollama (phi3:mini)
+- ✅ **Game Library Database**: SQLite database for your game collection
+- ✅ **Play History Tracking**: Remembers what you've played recently
 - ✅ **Casual Personality**: Talks like a gaming buddy, not a corporate assistant
 - ✅ **Mention Detection**: Just @Mitch to get suggestions
 - ✅ **Lightweight**: CPU-only inference, runs on modest hardware
@@ -68,10 +73,9 @@ Mitch: hmm not sure what the vibe is - competitive or co-op?
 - ✅ **Graceful Fallbacks**: Works even if AI is slow or offline
 
 **Coming Soon:**
-- Game library database
-- Play history tracking
-- Context-aware suggestions (player count, recent games)
+- Context-aware suggestions using game library
 - Voice channel detection
+- Admin commands for game management
 
 ---
 
@@ -109,10 +113,16 @@ Mitch: hmm not sure what the vibe is - competitive or co-op?
 - Interactive testing utility (scripts/test_ai.py)
 - Documentation updates
 
+**v1.0.0 Task 2 (Database & Game Tracking)** - ✅ Complete
+- SQLite database with games, play_history, and suggestions tables
+- GameTracker module for database operations
+- Game library population script (scripts/setup_games.py)
+- Database testing utility (scripts/test_database.py)
+- Comprehensive database documentation (docs/DATABASE.md)
+- Foreign key constraints and performance indexes
+
 **Future Enhancements** - 📋 Planned
-- Game library database (SQLite)
-- Play history tracking
-- Context-aware suggestions
+- Context-aware suggestion engine (using game library + AI)
 - Admin commands (!addgame, !played)
 - Voice channel detection
 - Steam library integration
@@ -125,7 +135,7 @@ Mitch: hmm not sure what the vibe is - competitive or co-op?
 - **Discord**: discord.py 2.x
 - **AI**: Ollama (local LLM inference with phi3:mini)
 - **HTTP Client**: aiohttp (included with discord.py)
-- **Database**: SQLite3 (coming soon)
+- **Database**: SQLite3 with WAL mode
 - **Deployment**: systemd service on Linux
 
 ---
@@ -146,15 +156,19 @@ mitch-discord-bot/
 │   ├── bot.py              # Main Discord bot
 │   ├── ollama_client.py    # Ollama API wrapper
 │   ├── personality.py      # Mitch's character & response polishing
+│   ├── game_tracker.py     # Database operations
 │   ├── config_loader.py    # YAML configuration
 │   └── logger.py           # Logging setup
 ├── scripts/
+│   ├── setup_games.py      # Populate game library
+│   ├── test_database.py    # Database tests
 │   ├── test_ai.py          # Interactive AI testing
 │   └── test_components.py  # Component tests
 ├── config/
 │   └── config.yaml.example # Configuration template
 ├── data/                   # Runtime data (logs, DB)
 ├── docs/
+│   ├── DATABASE.md         # Database documentation
 │   └── mitch.service       # SystemD service template
 └── requirements.txt        # Python dependencies
 ```
@@ -173,6 +187,32 @@ Mitch: not sure what the vibe is - competitive or chill?
 
 User: @Mitch something co-op for 4 people
 Mitch: hmm I don't have your game library set up yet, but for 4 people co-op usually works well
+```
+
+**Game Library Management:**
+```bash
+# Populate game library with sample games
+$ python3 scripts/setup_games.py populate
+Setting up Mitch's game library...
+✓ Added Phasmophobia (1-4 players, co-op)
+✓ Added Valheim (1-10 players, co-op)
+...
+✓ Library setup complete! Added 16 games.
+
+# List current games
+$ python3 scripts/setup_games.py list
+Mitch's Game Library (16 games):
+CO-OP:
+  • Phasmophobia (1-4 players) - horror, investigation, voice-chat
+  • Valheim (1-10 players) - survival, building, viking
+...
+
+# Show statistics
+$ python3 scripts/setup_games.py stats
+Mitch Database Statistics:
+  Total Games: 16
+  Total Plays: 42
+  Total Suggestions: 28
 ```
 
 **Testing AI Responses:**
@@ -208,6 +248,11 @@ ollama:
   temperature: 0.8  # Balance of creativity
   max_tokens: 300   # Keep responses brief
   timeout: 60       # Request timeout
+
+database:
+  path: "data/mitch.db"
+  foreign_keys: true
+  journal_mode: "WAL"
   
 logging:
   level: "INFO"
@@ -247,6 +292,7 @@ sudo journalctl -u mitch -f
 **Running Tests:**
 ```bash
 python3 scripts/test_components.py  # Component tests
+python3 scripts/test_database.py    # Database tests
 python3 scripts/test_ai.py          # Interactive AI testing
 ```
 
@@ -282,20 +328,21 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Basic AI responses with Ollama
 - Casual gaming buddy personality
 - Mention detection
-
-**v1.1.0 (Next):**
 - Game library database
 - Play history tracking
-- Context-aware suggestions
+
+**v1.1.0 (Next):**
+- Context-aware suggestion engine
+- Integration of AI + database for smart suggestions
+- Voice channel detection
 
 **v1.2.0 (Future):**
 - Admin commands
-- Voice channel detection
 - Enhanced personality
+- Reaction-based play tracking
 
 **v2.0.0 (Vision):**
 - Steam library integration
-- Reaction-based tracking
 - Multi-server support
 - Game statistics dashboard
 
@@ -307,6 +354,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Questions?** Check the docs:
 - [QUICKSTART.md](QUICKSTART.md) - Setup guide
+- [DATABASE.md](docs/DATABASE.md) - Database documentation
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development guide
 - `.agent/project-preferences.md` - Code standards
 
@@ -320,6 +368,7 @@ Built with love for small gaming groups by someone tired of "what should we play
 - [discord.py](https://discordpy.readthedocs.io/) - Discord bot framework
 - [Ollama](https://ollama.ai) - Local LLM inference
 - [phi3:mini](https://ollama.ai/library/phi3) - Lightweight AI model
+- [SQLite](https://www.sqlite.org/) - Embedded database
 
 ---
 
