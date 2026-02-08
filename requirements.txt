@@ -1,59 +1,15 @@
 # Mitch Discord Bot - Python Dependencies
-# Version: 0.1.0
-# Status: Placeholder - actual dependencies added in v0.2.0+
+# v0.2.0
 
-# ===================================
-# Core Dependencies (v0.2.0+)
-# ===================================
+# Discord bot framework
+discord.py==2.3.2
 
-# Discord API
-# discord.py>=2.3.0
+# YAML configuration
+PyYAML==6.0.1
 
-# AI/LLM Integration
-# ollama>=0.1.0
+# Testing framework
+pytest==7.4.3
 
-# HTTP Requests (for Ollama API)
-# requests>=2.31.0
-
-# ===================================
-# Database (v0.4.0+)
-# ===================================
-
-# SQLite3 is built into Python, no install needed
-# But we might add:
-# sqlalchemy>=2.0.0  # If we want ORM features
-
-# ===================================
-# Configuration
-# ===================================
-
-# YAML config parsing
-# pyyaml>=6.0
-
-# Environment variable management
-# python-dotenv>=1.0.0
-
-# ===================================
-# Utilities
-# ===================================
-
-# Date/time handling
-# python-dateutil>=2.8.0
-
-# ===================================
-# Development / Testing (optional)
-# ===================================
-
-# pytest>=7.4.0
-# pytest-asyncio>=0.21.0
-# black>=23.0.0
-# flake8>=6.0.0
-# mypy>=1.5.0
-
-# ===================================
-# Notes
-# ===================================
-# - Uncomment dependencies as features are implemented
-# - Keep versions flexible (use >= not ==) for easier updates
-# - Test with minimum required versions before release
-# - Pin exact versions in production deployments
+# Future dependencies (commented out for now):
+# aiohttp==3.9.1        # Already included with discord.py
+# python-dotenv==1.0.0  # For .env file support if needed later

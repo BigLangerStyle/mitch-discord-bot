@@ -1,7 +1,7 @@
 # Mitch - Your Gaming Buddy Discord Bot
 
-**Version:** 0.1.0  
-**Status:** Repository Structure (No Implementation Yet)
+**Version:** 0.2.0 (In Progress)  
+**Status:** Configuration & Logging Foundation Complete
 
 ---
 
@@ -36,10 +36,15 @@ No flashy commands. No enterprise features. Just a chill bot that helps you pick
 - Project conventions defined
 - Ready for implementation
 
-**v0.2.0 (Discord Bot Skeleton)** - 📋 Next Up
-- Basic Discord bot connection
-- Mention detection
-- Simple responses
+**v0.2.0 (Discord Bot Skeleton)** - 🏗️ In Progress
+- Task 1: Configuration & Logging Foundation ✅ Complete
+  - Config loader with YAML support
+  - Rotating file logging system
+  - Error handling utilities
+  - Unit tests for config validation
+- Task 2: Database Schema & Game Library (Next)
+- Task 3: Discord Bot Core
+- Task 4: Ollama Integration
 
 **v1.0.0 (Full Release)** - 🎯 Goal
 - Complete feature set
@@ -142,6 +147,6 @@ Built with:
 
 ---
 
-**Status**: Repository structure complete, implementation coming in v0.2.0+
+**Status**: v0.2.0 in progress - Configuration & Logging Foundation complete
 
 **Last Updated**: February 2026
