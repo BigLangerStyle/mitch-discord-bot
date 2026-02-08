@@ -231,27 +231,61 @@ Release chat responsibilities:
 * Produce one Task Description at a time
 * Produce a "Files to upload" list for the next feature chat
 
-Release chat outputs must always include:
+Release chat outputs must always include a complete task description block:
 
 ```
 Task: <title>
-Branch name: feature/<n>
+Branch name: feature/<name>
 Parent branch: release/<version>
 
 Context:
-- ...
+- Explain why this task exists
+- What it builds on or depends on
+- Any relevant background information
 
 Requirements:
-- [ ] ...
+- [ ] Specific, testable requirement 1
+- [ ] Specific, testable requirement 2
+- [ ] Each requirement should create or modify specific files
+- [ ] Include documentation updates where needed
 
+Expected Behavior:
+After this task is complete:
+- What should work
+- Example commands and their expected output
+- How to verify the task succeeded
+
+Testing:
+
+Local testing:
+```bash
+# Exact commands to run locally
+# What output to expect
+```
+
+MediaServer testing (if applicable):
+```bash
+# Commands for deployment testing
+```
+
+Success criteria:
+- Clear pass/fail check 1
+- Clear pass/fail check 2
+- What files/outputs should exist
+- What should NOT crash or fail
+```
+
+**Important:** The ENTIRE task description block above (from "Task:" through "Success criteria:") gets pasted into the feature chat by the user. This is NOT a file in the zip - it's pasted as text in the chat introduction.
+
+After the task description, separately provide:
+
+```
 Files to upload:
 1. .agent/project-preferences.md
-2. <the exact files this task will touch>
+2. <files that will be read or modified>
 3. README.md (if context needed)
 4. requirements.txt (if adding dependencies)
 ```
-
-Note: The task description itself is NOT a file. It is produced as chat output by the release chat and pasted inline by the user into the feature chat. It does not appear in the zip or the upload list.
 
 ---
 
@@ -262,7 +296,7 @@ Once Claude produces a "Files to upload" list, the user can package it into a si
 Claude must generate the zip command automatically at the end of every "Files to upload" list. Use PowerShell — `zip` is not installed in Git Bash. Example:
 
 ```powershell
-cd "C:\Users\YourUsername\Documents\Git\mitch-discord-bot"
+cd C:\Users\slanger\Documents\Git\mitch-discord-bot
 Compress-Archive -Path .agent/project-preferences.md, README.md, src/bot.py, src/personality.py -DestinationPath feature_voice_detection_files.zip
 ```
 
@@ -289,7 +323,7 @@ Rules for the generated command:
 If the listing shows bare filenames with no directory prefixes, the structure was lost. Re-zip using this approach instead:
 
 ```powershell
-cd "C:\Users\YourUsername\Documents\Git\mitch-discord-bot"
+cd C:\Users\slanger\Documents\Git\mitch-discord-bot
 $files = @(
     ".agent/project-preferences.md",
     "README.md",
@@ -366,33 +400,66 @@ The summary block format:
 
 ---
 
-## Chat Intro (Paste at Start of Every New Chat)
+## Release Chat Output: Single Markdown File for Feature Chat
 
-When handing off to a new chat (release or feature), Claude must produce a short markdown intro block. The user pastes this as their first message in the new chat, before uploading any files.
+When a release chat produces a task, it must create a **single markdown file** that contains everything the feature chat needs. This file gets copy/pasted into the new feature chat.
 
-Template:
+The file structure:
 
 ```markdown
-## Mitch Discord Bot — [release/v0.2.0 | feature/voice-detection]
+## Mitch Discord Bot — feature/[task-name]
 
-This is the **[release orchestration | feature implementation]** chat for Mitch Discord Bot.
+This is the **feature implementation** chat for Mitch Discord Bot.
 
 **Project:** Casual Discord bot for small gaming groups. Suggests games based on who's online. Python/discord.py, Ollama (phi3:mini), SQLite. Self-hosted on MediaServer (Linux Mint), developed on Windows.
 
-**Workflow rules:** `.agent/workflows/claude_workflow.md` (in the Project files — read it first).
+**Workflow rules:** `.agent/claude_workflow.md` (in the uploaded files — read it first).
 
 **What this chat does:**
-- [Release chat: Define scope, produce task descriptions and file lists for feature chats. No implementation work.]
-- [Feature chat: Implement the task description pasted below. Stay inside the uploaded files only.]
+[Brief description of what this feature chat implements]
 
 **Uploaded files are the source of truth.** Do not guess at code you haven't seen. If you need a file not uploaded, ask for exactly that one file.
+
+---
+
+## Task [N]: [Task Title]
+
+**Branch name:** `feature/[task-name]`  
+**Parent branch:** `release/[version]`
+
+### Context
+[Why this task exists, what it builds on]
+
+### Requirements
+- [ ] Requirement 1
+- [ ] Requirement 2
+
+### Expected Behavior
+[What should work after completion]
+
+### Testing
+**Local testing:**
+```bash
+# Commands to test
 ```
 
-Rules:
-* Claude fills in the bracketed choices — never leaves them as options
-* The block is short enough to paste as a single message
-* Goes at the very end of the handoff output, after the zip command
-* The task description is pasted inline directly after the chat intro block
+**Success criteria:**
+- Specific pass/fail checks
+
+### Files to upload for this task
+```
+1. file1.md
+2. file2.py
+```
+
+### PowerShell command to create the zip
+```powershell
+cd C:\Users\slanger\Documents\Git\mitch-discord-bot
+Compress-Archive -Path file1.md, file2.py -DestinationPath feature-task-name.zip -Force
+```
+```
+
+**Critical:** Release chat creates this as a downloadable .md file. User copies the entire file content and pastes it as their first message in the new feature chat, then uploads the zip.
 
 ---
 
