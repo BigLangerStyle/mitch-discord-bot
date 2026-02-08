@@ -1,25 +1,4 @@
-# Mitch Discord Bot - Git Ignore
-# Keep secrets and runtime data out of version control
-
-# ==========================================
-# Secrets and Sensitive Configuration
-# ==========================================
-config/config.yaml
-*.env
-.env.*
-
-# ==========================================
-# Runtime Data (Generated/User-Specific)
-# ==========================================
-data/
-*.db
-*.sqlite
-*.sqlite3
-*.log
-
-# ==========================================
 # Python
-# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -37,64 +16,35 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Virtual environments
+# Virtual Environment
 venv/
-.venv/
-env/
 ENV/
-env.bak/
-venv.bak/
+env/
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# ==========================================
-# IDEs and Editors
-# ==========================================
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
-
-# ==========================================
-# Operating System
-# ==========================================
 Thumbs.db
-desktop.ini
 
-# ==========================================
-# Backup Files
-# ==========================================
-*.bak
-*.backup
-*.old
-*.orig
+# Mitch-specific
+config/config.yaml
+data/
+*.log
 
-# ==========================================
-# WinSCP
-# ==========================================
-*.tmp
+# Handoff zip files
+*.zip
+
+# SQLite databases (data/ already covers this, but being explicit)
+*.db
+*.db-shm
+*.db-wal
