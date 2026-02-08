@@ -79,6 +79,16 @@ CORPORATE_PHRASES = [
     r"Just sayin'?\.?",
     r"I hope",
     r"Sounds? good\??",
+    r"check out",
+    r"checking out",
+    r"give .+ a try",
+    r"why not try",
+    r"since you",
+    r"offers? a",
+    r"without guns",
+    r"for a twisted",
+    r"that sci-fi touch",
+    r"with its .+ concept",
 ]
 
 # Overly enthusiastic phrases to remove
@@ -91,6 +101,22 @@ ENTHUSIASM_PHRASES = [
     r"Great!",
     r"Exciting!",
     r"ready for some gaming fun",
+]
+
+# Patterns that indicate the AI is being too formal/descriptive
+FORMALITY_INDICATORS = [
+    r"hey \w+,",  # "hey Brad," or "hey [name],"
+    r"since you",
+    r"haven't played .+ lately",
+    r"offers? a (?:fresh|new|unique|different)",
+    r"take on",
+    r"without .+ing",
+    r"twisted .+line",
+    r"with (?:its|their|the)",
+    r"always fun to",
+    r"a bit scared",
+    r"want to game",
+    r"checking in",
 ]
 
 
@@ -128,6 +154,11 @@ class PersonalitySystem:
             
             # Polish the response to keep it casual
             polished = self._polish_response(raw_response)
+            
+            # Check if response is still too formal after polishing
+            if self._is_too_formal(polished):
+                logger.warning(f"Response still too formal after polishing: {polished[:50]}...")
+                return self._get_fallback_response()
             
             logger.info(f"Response generated: {len(polished)} chars")
             return polished
@@ -205,6 +236,9 @@ class PersonalitySystem:
         emoji_pattern = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002702-\U000027B0\U000024C2-\U0001F251\u2600-\u26FF\u2700-\u27BF]'
         response = re.sub(emoji_pattern, '', response)
         
+        # Remove "hey [name]," greetings at start
+        response = re.sub(r'^hey \w+,\s*', '', response, flags=re.IGNORECASE)
+        
         # Remove corporate and enthusiasm phrases
         for phrase in CORPORATE_PHRASES + ENTHUSIASM_PHRASES:
             response = re.sub(phrase, "", response, flags=re.IGNORECASE)
@@ -236,18 +270,17 @@ class PersonalitySystem:
         
         # Enforce strict length limits
         # Discord limit is 2000, but we want to keep it very brief
-        if len(response) > 300:
+        if len(response) > 200:
             # Try to cut at a sentence boundary
-            sentences = response[:300].split('.')
+            sentences = response[:200].split('.')
             if len(sentences) > 1:
                 response = '.'.join(sentences[:-1]) + '.'
             else:
                 # Cut at word boundary
-                response = response[:297] + '...'
+                response = response[:197] + '...'
         
-        # If response is still too structured/long, simplify it
-        # Look for multi-sentence responses and condense
-        if len(response) > 150:
+        # If response is still too long/structured, simplify it
+        if len(response) > 100:
             # Try to extract just the core message
             # Look for questions or key phrases
             if '?' in response:
@@ -280,13 +313,38 @@ class PersonalitySystem:
             logger.warning("Response too short after polishing, using fallback")
             return self._get_fallback_response()
         
-        # If response still seems too formal/long, use fallback
-        formal_indicators = ['everyone', 'alright', 'should be', 'how about', 'ready for']
-        if len(response) > 250 or any(phrase in response.lower() for phrase in formal_indicators):
-            logger.warning(f"Response still too formal after polishing: {response[:50]}... using fallback")
-            return self._get_fallback_response()
-        
         return response
+    
+    def _is_too_formal(self, response: str) -> bool:
+        """
+        Check if response is still too formal after polishing.
+        
+        Args:
+            response: Polished response text
+            
+        Returns:
+            True if response is too formal and should use fallback
+        """
+        response_lower = response.lower()
+        
+        # Check for formality indicators
+        for pattern in FORMALITY_INDICATORS:
+            if re.search(pattern, response_lower):
+                logger.debug(f"Formality detected: {pattern}")
+                return True
+        
+        # Check if response is too long (likely descriptive)
+        if len(response) > 150:
+            logger.debug(f"Response too long: {len(response)} chars")
+            return True
+        
+        # Check for multiple sentences (likely over-explaining)
+        sentence_count = len(re.split(r'[.!?]\s+', response))
+        if sentence_count > 2:
+            logger.debug(f"Too many sentences: {sentence_count}")
+            return True
+        
+        return False
     
     def _get_fallback_response(self) -> str:
         """
