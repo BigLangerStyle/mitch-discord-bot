@@ -112,15 +112,14 @@ class PersonalitySystem:
         Generate a response to user's message using AI.
         
         Args:
-            user_message: The message from the user
-            context: Optional context dict (player_count, recent_games, etc.)
-                    Reserved for future use - currently unused
+            user_message: The message from the user (or pre-built prompt for suggestions)
+            context: Optional context dict (player_count, filtered_games, recent_games, etc.)
+                    If context contains 'filtered_games', treats user_message as complete prompt
                     
         Returns:
             Polished response text ready to send
         """
         # Build the full prompt
-        # Future: incorporate context here (player counts, game history, etc.)
         full_prompt = self._build_prompt(user_message, context)
         
         try:
@@ -141,17 +140,28 @@ class PersonalitySystem:
         """
         Build the full prompt to send to AI.
         
+        If context is provided with game suggestion info, treats user_message as 
+        the complete pre-built prompt from suggestion_engine.
+        Otherwise builds general conversation prompt.
+        
         Args:
-            user_message: The user's message
-            context: Optional context information (not yet implemented)
+            user_message: The user's message (or complete prompt for suggestions)
+            context: Optional context information (player count, filtered_games, etc.)
             
         Returns:
             Complete prompt string
         """
+        # Check if this is a suggestion request with context
+        if context and 'filtered_games' in context:
+            # This is a suggestion request - user_message is already the full prompt
+            # from suggestion_engine, so just return it as-is
+            return user_message
+        
+        # Otherwise, build normal conversational prompt
         # Start with system prompt
         prompt_parts = [SYSTEM_PROMPT]
         
-        # Add context if provided (future enhancement)
+        # Add context if provided (for general conversation)
         if context:
             prompt_parts.append("\nCONTEXT:")
             if "player_count" in context:

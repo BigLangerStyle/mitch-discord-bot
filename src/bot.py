@@ -14,6 +14,8 @@ from config_loader import load_config
 from logger import setup_logging, get_logger
 from ollama_client import OllamaClient
 from personality import PersonalitySystem
+from game_tracker import GameTracker
+from suggestion_engine import SuggestionEngine
 
 # Load configuration first
 config = load_config()
@@ -62,6 +64,21 @@ class MitchBot:
         self.personality = personality
         self.shutdown_event = asyncio.Event()
         
+        # Initialize game tracker
+        self.game_tracker = GameTracker(
+            db_path=config.get('database', {}).get('path', 'data/mitch.db'),
+            config=config
+        )
+        
+        # Initialize suggestion engine
+        self.suggestion_engine = SuggestionEngine(
+            game_tracker=self.game_tracker,
+            personality=personality,
+            config=config
+        )
+        
+        logger.info("MitchBot initialized with suggestion engine")
+        
     async def setup(self):
         """Setup bot event handlers."""
         
@@ -94,7 +111,8 @@ class MitchBot:
         """
         Handle when bot is mentioned in a message.
         
-        Uses AI to generate contextual responses as Mitch.
+        Detects if user wants game suggestions and routes to suggestion engine,
+        or uses general AI conversation for casual messages.
         
         Args:
             message: Discord message object
@@ -106,22 +124,54 @@ class MitchBot:
                 f"{message.content[:100]}"
             )
             
-            # Show typing indicator while AI generates response
+            # Check if user is asking for game suggestions
+            content_lower = message.content.lower()
+            asking_for_game = any(phrase in content_lower for phrase in [
+                'what should we play',
+                'what should i play',
+                'what to play',
+                'game suggestion',
+                'suggest a game',
+                'recommend a game',
+                'what game',
+                'game recommend'
+            ])
+            
+            # Show typing indicator while processing
             async with message.channel.typing():
                 # Small delay to feel more natural
                 await asyncio.sleep(0.5)
                 
-                # Generate AI response
-                logger.info("Calling AI for response...")
-                start_time = asyncio.get_event_loop().time()
-                
-                response = await self.personality.generate_response(
-                    message.content,
-                    context=None  # Future: add player count, game history, etc.
-                )
-                
-                elapsed = asyncio.get_event_loop().time() - start_time
-                logger.info(f"AI response received ({elapsed:.1f}s)")
+                if asking_for_game:
+                    logger.info("Detected game suggestion request")
+                    
+                    # Estimate player count from server context
+                    player_count = self._estimate_player_count(message)
+                    
+                    logger.info(f"Generating suggestion for {player_count} players")
+                    start_time = asyncio.get_event_loop().time()
+                    
+                    # Generate suggestion using suggestion engine
+                    response = await self.suggestion_engine.suggest_games(
+                        player_count=player_count,
+                        requester_name=message.author.name
+                    )
+                    
+                    elapsed = asyncio.get_event_loop().time() - start_time
+                    logger.info(f"Suggestion generated ({elapsed:.1f}s)")
+                    
+                else:
+                    logger.info("Handling as casual conversation")
+                    start_time = asyncio.get_event_loop().time()
+                    
+                    # Generate generic conversational response
+                    response = await self.personality.generate_response(
+                        message.content,
+                        context=None
+                    )
+                    
+                    elapsed = asyncio.get_event_loop().time() - start_time
+                    logger.info(f"AI response received ({elapsed:.1f}s)")
                 
                 # Send response
                 await message.channel.send(response)
@@ -139,6 +189,43 @@ class MitchBot:
                 logger.info(f"Sent fallback response: {fallback}")
             except Exception:
                 logger.error("Failed to send fallback response")
+    
+    def _estimate_player_count(self, message) -> int:
+        """
+        Estimate player count from server context.
+        
+        For now, just count online members in the server.
+        Future: could check voice channels, parse message, etc.
+        
+        Args:
+            message: Discord message object
+            
+        Returns:
+            int: Estimated player count (default to 4 if uncertain)
+        """
+        try:
+            # Count online members (excluding bots)
+            online_members = [
+                m for m in message.guild.members 
+                if m.status != discord.Status.offline and not m.bot
+            ]
+            count = len(online_members)
+            
+            # Clamp to reasonable range
+            if count < 1:
+                count = 4  # Default fallback
+            elif count > 10:
+                count = 10  # Cap at max game size
+                
+            logger.info(
+                f"Estimated {count} players from "
+                f"{len(online_members)} online members"
+            )
+            return count
+            
+        except Exception as e:
+            logger.warning(f"Failed to estimate player count: {e}")
+            return 4  # Safe default
     
     async def start(self):
         """Start the bot with error handling."""
