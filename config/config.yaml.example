@@ -1,0 +1,171 @@
+# Mitch Discord Bot - Configuration Template
+# Version: 0.1.0
+# 
+# INSTRUCTIONS:
+# 1. Copy this file to config/config.yaml
+# 2. Fill in your actual values (Discord token, server ID, etc.)
+# 3. NEVER commit config.yaml to Git (it's in .gitignore)
+
+# ===================================
+# Discord Configuration
+# ===================================
+discord:
+  # Your Discord bot token from https://discord.com/developers/applications
+  # KEEP THIS SECRET! Never share or commit this token.
+  token: "YOUR_DISCORD_BOT_TOKEN_HERE"
+  
+  # Your Discord server (guild) ID
+  # Enable Developer Mode in Discord, right-click your server, Copy ID
+  guild_id: 1234567890123456789
+  
+  # Command prefix (if using traditional commands)
+  # Set to null or empty to use only @mentions
+  prefix: "!"
+  
+  # Bot status message
+  status: "with your game library"
+
+# ===================================
+# Ollama / AI Configuration
+# ===================================
+ollama:
+  # Ollama API endpoint (usually localhost if running locally)
+  host: "http://localhost:11434"
+  
+  # Model to use for responses
+  # Recommended: phi3:mini (lightweight, good for gaming chat)
+  # Alternatives: llama2, mistral, codellama
+  model: "phi3:mini"
+  
+  # Temperature (0.0 = deterministic, 1.0 = creative)
+  # 0.8 is a good balance for casual conversation
+  temperature: 0.8
+  
+  # Maximum tokens in response (keep responses concise)
+  max_tokens: 300
+  
+  # Request timeout in seconds
+  timeout: 60
+
+# ===================================
+# Database Configuration
+# ===================================
+database:
+  # SQLite database file path
+  # Relative to project root or absolute path
+  path: "data/mitch.db"
+  
+  # Enable foreign key constraints
+  foreign_keys: true
+  
+  # Journal mode (WAL is recommended for concurrent access)
+  journal_mode: "WAL"
+
+# ===================================
+# Logging Configuration
+# ===================================
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log file path
+  file: "data/mitch.log"
+  
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Max log file size (in MB, 0 = unlimited)
+  max_size: 10
+  
+  # Number of backup log files to keep
+  backup_count: 3
+
+# ===================================
+# Game Suggestion Settings
+# ===================================
+suggestions:
+  # How many recent plays to consider when avoiding repetition
+  recent_plays_window: 7
+  
+  # Minimum time (in hours) before suggesting same game again
+  cooldown_hours: 48
+  
+  # Maximum number of suggestions to provide
+  max_suggestions: 3
+  
+  # Include player count in context
+  use_player_count: true
+
+# ===================================
+# Personality Configuration
+# ===================================
+personality:
+  # Bot's display name in responses
+  name: "Mitch"
+  
+  # Response style: casual, formal, chaotic
+  style: "casual"
+  
+  # Use gaming slang
+  use_slang: true
+  
+  # Maximum response length (characters)
+  max_response_length: 500
+
+# ===================================
+# Feature Flags (enable/disable features)
+# ===================================
+features:
+  # Track play history
+  play_tracking: true
+  
+  # Admin commands (!addgame, !played)
+  admin_commands: false
+  
+  # Voice channel detection
+  voice_detection: false
+  
+  # Reaction-based tracking
+  reaction_tracking: false
+  
+  # Steam library integration
+  steam_integration: false
+
+# ===================================
+# Admin Settings
+# ===================================
+admin:
+  # Discord user IDs with admin privileges
+  # Get your ID: Enable Developer Mode, right-click your name, Copy ID
+  user_ids:
+    - 1234567890123456789  # Replace with actual admin user IDs
+  
+  # Role IDs with admin privileges (optional)
+  role_ids:
+    - 9876543210987654321  # Replace with actual admin role IDs
+
+# ===================================
+# Performance Settings
+# ===================================
+performance:
+  # Cache size for game library (number of games)
+  game_cache_size: 1000
+  
+  # Response cache TTL in seconds
+  response_cache_ttl: 300
+  
+  # Maximum concurrent Ollama requests
+  max_concurrent_ai_requests: 2
+
+# ===================================
+# Development Settings
+# ===================================
+development:
+  # Enable debug mode (more verbose logging, error details)
+  debug: false
+  
+  # Auto-reload on code changes (not recommended for production)
+  auto_reload: false
+  
+  # Test mode (uses test data, doesn't affect real database)
+  test_mode: false
