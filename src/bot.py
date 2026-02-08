@@ -12,14 +12,21 @@ import signal
 import sys
 import random
 from config_loader import load_config
-from logger import setup_logger
-from utils import safe_async_call
+from logger import setup_logging, get_logger
 
-# Initialize logging
-logger = setup_logger(__name__)
-
-# Load configuration
+# Load configuration first
 config = load_config()
+
+# Setup logging from config
+setup_logging(
+    log_file=config['logging']['file'],
+    log_level=config['logging']['level'],
+    max_bytes=config['logging']['max_bytes'],
+    backup_count=config['logging']['backup_count']
+)
+
+# Get logger for this module
+logger = get_logger(__name__)
 
 # Discord intents configuration
 intents = discord.Intents.default()
