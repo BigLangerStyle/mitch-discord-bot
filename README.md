@@ -1,7 +1,7 @@
 # Mitch - Your Gaming Buddy Discord Bot
 
 **Version:** 0.2.0 (In Progress)  
-**Status:** Configuration & Logging Foundation Complete
+**Status:** Discord Bot Skeleton Complete - Bot Connects & Responds
 
 ---
 
@@ -14,6 +14,42 @@ Mitch is a Discord bot that acts like your gaming buddy - not a corporate assist
 Picture this: You and your friends hop into Discord voice. Someone asks, "what should we play?" Instead of the usual back-and-forth, you just @mention Mitch. He knows who's online, what you've played recently, and suggests something that actually fits your vibe.
 
 No flashy commands. No enterprise features. Just a chill bot that helps you pick a game and get playing.
+
+---
+
+## Quick Start
+
+**Prerequisites:**
+- Python 3.9+
+- Discord bot token ([Create one here](https://discord.com/developers/applications))
+
+**Setup:**
+```bash
+# Clone the repo
+git clone https://github.com/yourusername/mitch-discord-bot.git
+cd mitch-discord-bot
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure the bot
+cp config/config.yaml.example config/config.yaml
+nano config/config.yaml  # Add your Discord bot token
+
+# Run the bot
+./run.sh
+```
+
+**Try it out:**
+```
+User: @Mitch hey
+Mitch: yo what's up?
+
+User: @Mitch what should we play?
+Mitch: hmm not sure yet, still setting up my game library
+```
+
+*(Note: Game suggestions coming in v0.3.0 - currently using hardcoded responses)*
 
 ---
 
@@ -42,8 +78,13 @@ No flashy commands. No enterprise features. Just a chill bot that helps you pick
   - Rotating file logging system
   - Error handling utilities
   - Unit tests for config validation
-- Task 2: Database Schema & Game Library (Next)
-- Task 3: Discord Bot Core
+- Task 2: Discord Bot Core ✅ Complete
+  - Discord connection with proper intents
+  - Mention detection and response
+  - Hardcoded casual responses
+  - Graceful error handling and shutdown
+  - Unit tests for bot functionality
+- Task 3: Database Schema & Game Library (Next)
 - Task 4: Ollama Integration
 
 **v1.0.0 (Full Release)** - 🎯 Goal
@@ -51,7 +92,7 @@ No flashy commands. No enterprise features. Just a chill bot that helps you pick
 - Production-ready
 - Deployed and tested
 
-See [QUICKSTART.md](QUICKSTART.md) for setup instructions (coming in v0.2.0+).
+See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions (coming in v0.2.0+).
 
 ---
 
@@ -105,16 +146,23 @@ Mitch is different:
 mitch-discord-bot/
 ├── .agent/                  # Agent workflow preferences
 ├── config/                  # Configuration templates
+│   └── config.yaml.example
 ├── data/                    # Runtime data (database, logs)
 ├── docs/                    # Additional documentation
 ├── scripts/                 # Utility scripts (v0.2.0+)
-├── src/                     # Source code (v0.2.0+)
-├── tests/                   # Unit tests (v0.2.0+)
+├── src/                     # Source code
+│   ├── bot.py              # Main Discord bot
+│   ├── config_loader.py    # Configuration loading
+│   ├── logger.py           # Logging setup
+│   └── utils.py            # Error handling utilities
+├── tests/                   # Unit tests
+│   └── test_bot.py         # Bot functionality tests
 ├── README.md               # You are here
 ├── QUICKSTART.md           # Setup guide
 ├── CONTRIBUTING.md         # Contribution guidelines
 ├── LICENSE                 # MIT License
-└── requirements.txt        # Python dependencies
+├── requirements.txt        # Python dependencies
+└── run.sh                  # Startup script
 ```
 
 ---
@@ -147,6 +195,6 @@ Built with:
 
 ---
 
-**Status**: v0.2.0 in progress - Configuration & Logging Foundation complete
+**Status**: v0.2.0 in progress - Discord Bot Skeleton complete
 
 **Last Updated**: February 2026
