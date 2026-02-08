@@ -246,6 +246,64 @@ main
 
 ---
 
+## AI-Assisted Development Workflow
+
+This project uses a structured workflow for AI-assisted development with Claude. If you're using AI tools to help build features, follow these guidelines:
+
+### Workflow Documentation
+
+See `.agent/claude_workflow.md` for detailed workflow rules. Key principles:
+
+**DO:**
+- ✅ Keep context small and focused (only files being modified)
+- ✅ Provide complete, final files (not diffs or snippets)
+- ✅ Test changes on both development and deployment environments
+- ✅ Use feature branches for all changes
+- ✅ Run component tests before committing
+
+**DON'T:**
+- ❌ Upload full project zips to AI assistants
+- ❌ Commit AI-generated code without testing it yourself
+- ❌ Skip the testing phase
+- ❌ Commit secrets or tokens (even in example files)
+
+### Required Testing Before Commit
+
+Every PR must pass these checks:
+
+1. **Component Tests:**
+   ```bash
+   python scripts/test_components.py
+   # Must show "All checks passed!"
+   ```
+
+2. **Manual Testing:**
+   ```bash
+   # Test locally first
+   ./run.sh
+   # Verify bot connects and responds to @mentions
+   ```
+
+3. **Deployment Testing (for significant changes):**
+   ```bash
+   # On MediaServer or test environment
+   git pull
+   sudo systemctl restart mitch
+   sudo journalctl -u mitch -f
+   # Verify no errors in logs
+   ```
+
+### Config Management
+
+When adding new config options:
+
+1. Update `config/config.yaml.example` with placeholder values
+2. Document the new option in QUICKSTART.md
+3. Never commit actual tokens or secrets
+4. Use clear placeholder text like `YOUR_TOKEN_HERE`
+
+---
+
 ## What NOT to Do
 
 ❌ **Don't add enterprise features** - This isn't for 1000+ user servers

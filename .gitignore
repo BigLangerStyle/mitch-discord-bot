@@ -1,12 +1,29 @@
-# Byte-compiled / optimized / DLL files
+# Mitch Discord Bot - Git Ignore
+# Keep secrets and runtime data out of version control
+
+# ==========================================
+# Secrets and Sensitive Configuration
+# ==========================================
+config/config.yaml
+*.env
+.env.*
+
+# ==========================================
+# Runtime Data (Generated/User-Specific)
+# ==========================================
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# ==========================================
+# Python
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -20,19 +37,24 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
 # PyInstaller
 *.manifest
 *.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
@@ -47,176 +69,32 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-cover/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# pdm
-.pdm.toml
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# ===================================
-# Project-Specific Ignores
-# ===================================
-
-# Discord Bot Token & Secrets
-config/config.yaml
-*.token
-.env.local
-
-# Database Files
-data/*.db
-data/*.db-journal
-data/*.db-shm
-data/*.db-wal
-*.sqlite
-*.sqlite3
-
-# Log Files
-data/*.log
-*.log
-logs/
-
-# Temporary Files
-*.tmp
-*.temp
-.temp/
-temp/
-
-# Backup Files
-*.bak
-*.backup
-*~
-
-# OS-Specific Files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-Desktop.ini
-
-# IDE / Editor Files
+# ==========================================
+# IDEs and Editors
+# ==========================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.project
-.pydevproject
-.settings/
-*.sublime-project
-*.sublime-workspace
+.DS_Store
 
-# Testing / Development
-test_output/
-*.test
-.test/
+# ==========================================
+# Operating System
+# ==========================================
+Thumbs.db
+desktop.ini
 
-# Coverage Reports
-.coverage
-htmlcov/
+# ==========================================
+# Backup Files
+# ==========================================
+*.bak
+*.backup
+*.old
+*.orig
 
-# Virtual Environment (additional patterns)
-venv*/
-ENV*/
-
-# Ollama / AI Model Files (if caching locally)
-models/
-*.gguf
-*.bin
-
-# Personal Notes / TODO Files
-TODO.md
-NOTES.md
-SCRATCH.md
-
-# Development Scripts (if you want to keep them private)
-# dev/
-# scripts/personal/
-
-# System Service Files (customized versions)
-# Keep the template, ignore actual deployed versions
-# *.service (except the template in docs/)
+# ==========================================
+# WinSCP
+# ==========================================
+*.tmp
