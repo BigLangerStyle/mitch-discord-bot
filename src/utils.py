@@ -7,7 +7,7 @@ Error handling, validation, and helper functions to prevent crashes.
 import sys
 import logging
 from pathlib import Path
-from typing import Callable, Any, Optional, TypeVar
+from typing import Callable, Any, Optional, TypeVar, Tuple, List, Union
 
 
 T = TypeVar('T')
@@ -49,7 +49,7 @@ def safe_execute(
         return fallback
 
 
-def validate_environment() -> tuple[bool, list[str]]:
+def validate_environment() -> Tuple[bool, List[str]]:
     """
     Validate that the environment is suitable for running the bot.
     
@@ -93,7 +93,7 @@ def validate_environment() -> tuple[bool, list[str]]:
     return (len(issues) == 0, issues)
 
 
-def ensure_directory(path: str | Path) -> bool:
+def ensure_directory(path: Union[str, Path]) -> bool:
     """
     Ensure a directory exists, creating it if necessary.
     
