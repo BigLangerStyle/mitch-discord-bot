@@ -1,6 +1,6 @@
 # Agent Preferences for Mitch Discord Bot Project
 
-## ðŸš¨ CRITICAL: Version Control Rules
+## 🚨 CRITICAL: Version Control Rules
 
 **CURRENT VERSION: 1.0.0**
 
@@ -12,28 +12,35 @@ All features currently listed in the project as part of **v1.0.0** should remain
 
 ### When Adding New Features
 
-#### âœ… CORRECT Approach:
+#### ✅ CORRECT Approach:
 - Keep version at 1.0.0 in all version-tracking files
 - Add feature to existing version sections in CHANGELOG.md (if created)
 - Update README.md with new features under current version
 - Keep the same release date or update to current work date
 
-#### âŒ WRONG Approach:
+#### ❌ WRONG Approach:
 - Creating new version sections without explicit user instruction
 - Incrementing version numbers spontaneously
 - Creating new release tags without permission
 
 ### Current Development Status
 
-**v1.0.0 - Complete:**
+**v0.2.0 - Complete (Working Bot Foundation):**
 - [x] Discord bot with mention detection
-- [x] Ollama integration (phi3:mini)
-- [x] Game library database (SQLite)
-- [x] Play history tracking
-- [x] Casual gaming buddy personality
+- [x] Configuration loading (YAML)
+- [x] Logging infrastructure
+- [x] Hardcoded responses (no AI yet)
 - [x] systemd service template
 - [x] Testing utilities
-- [x] Comprehensive documentation
+- [x] Comprehensive documentation (QUICKSTART, CONTRIBUTING)
+- [x] Deployment scripts (run.sh)
+
+**v1.0.0 - In Progress:**
+- [ ] Ollama integration (phi3:mini)
+- [ ] Casual gaming buddy personality (AI-powered)
+- [ ] Game library database (SQLite)
+- [ ] Play history tracking
+- [ ] Game suggestions based on who's online
 
 **Future (Not Yet Scheduled):**
 - [ ] Admin commands (!addgame, !played)
@@ -44,7 +51,7 @@ All features currently listed in the project as part of **v1.0.0** should remain
 
 ---
 
-## ðŸŒ³ Git Workflow & Branch Strategy
+## 🌳 Git Workflow & Branch Strategy
 
 **This project uses a simple, practical branching workflow.**
 
@@ -52,9 +59,11 @@ All features currently listed in the project as part of **v1.0.0** should remain
 
 ```
 main
- â””â”€â”€ feature/voice-detection
- â””â”€â”€ feature/admin-commands
- â””â”€â”€ fix/ollama-timeout
+ └── release/v0.2.0 (complete)
+ └── release/v1.0.0 (in progress)
+      └── feature/ollama-integration
+      └── feature/game-database
+      └── feature/personality-system
 ```
 
 ### Workflow Rules
@@ -109,45 +118,50 @@ git push origin fix/ollama-timeout
 
 ---
 
-## ðŸ“ Project Structure
+## 📁 Project Structure
 
 ```
 mitch-discord-bot/
-â”œâ”€â”€ .agent/                    (project preferences)
-â”‚   â””â”€â”€ project-preferences.md
-â”œâ”€â”€ .git/                      (version control)
-â”œâ”€â”€ .gitignore
-â”œâ”€â”€ LICENSE
-â”œâ”€â”€ README.md
-â”œâ”€â”€ QUICKSTART.md
-â”œâ”€â”€ CONTRIBUTING.md
-â”œâ”€â”€ GITHUB_SETUP.md
-â”œâ”€â”€ config/
-â”‚   â””â”€â”€ config.yaml.example
-â”œâ”€â”€ data/                      (created at runtime)
-â”‚   â”œâ”€â”€ mitch.db              (SQLite database)
-â”‚   â””â”€â”€ mitch.log             (log file)
-â”œâ”€â”€ docs/
-â”‚   â”œâ”€â”€ DEVELOPMENT.md
-â”‚   â””â”€â”€ mitch.service
-â”œâ”€â”€ scripts/
-â”‚   â”œâ”€â”€ setup_games.py        (populate game library)
-â”‚   â”œâ”€â”€ test_components.py    (test suite)
-â”‚   â””â”€â”€ test_ai.py           (interactive AI tester)
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ bot.py               (main Discord bot)
-â”‚   â”œâ”€â”€ ollama_client.py     (Ollama API integration)
-â”‚   â”œâ”€â”€ personality.py       (Mitch's character)
-â”‚   â”œâ”€â”€ game_tracker.py      (database operations)
-â”‚   â””â”€â”€ config_loader.py     (configuration)
-â”œâ”€â”€ tests/                    (future unit tests)
-â”œâ”€â”€ requirements.txt
-â””â”€â”€ run.sh
+├── .agent/                    (project preferences)
+│   ├── project-preferences.md
+│   └── claude_workflow.md
+├── .git/                      (version control)
+├── .gitignore
+├── LICENSE
+├── README.md
+├── QUICKSTART.md
+├── CONTRIBUTING.md
+├── GITHUB_SETUP.md
+├── config/
+│   └── config.yaml.example
+├── data/                      (created at runtime)
+│   ├── mitch.db              (SQLite database)
+│   └── mitch.log             (log file)
+├── docs/
+│   ├── DEVELOPMENT.md
+│   └── mitch.service
+├── scripts/
+│   ├── setup_games.py        (populate game library)
+│   ├── test_components.py    (test suite)
+│   └── test_ai.py           (interactive AI tester)
+├── src/
+│   ├── bot.py               (main Discord bot)
+│   ├── ollama_client.py     (Ollama API integration)
+│   ├── personality.py       (Mitch's character)
+│   ├── game_tracker.py      (database operations)
+│   ├── config_loader.py     (configuration)
+│   ├── logger.py            (logging setup)
+│   └── utils.py             (utilities)
+├── tests/                    (unit tests)
+│   ├── test_config.py
+│   └── test_bot.py
+├── requirements.txt
+└── run.sh
 ```
 
 ---
 
-## ðŸ’» Development Workflow
+## 💻 Development Workflow
 
 ### On Development Machine (Windows/Mac/Linux):
 1. Edit code in your IDE (Cursor, VSCode, etc.)
@@ -157,14 +171,14 @@ mitch-discord-bot/
 
 ### On MediaServer (Linux Mint):
 1. SSH into server
-2. `cd ~/mitch-discord-bot`
+2. `cd ~/git/mitch-discord-bot`
 3. `git pull`
 4. `sudo systemctl restart mitch` (if running as service)
 5. Check logs: `sudo journalctl -u mitch -f`
 
 ---
 
-## ðŸ Python Development Standards
+## 🐍 Python Development Standards
 
 ### Code Style:
 - Keep functions short and focused
@@ -185,7 +199,7 @@ mitch-discord-bot/
 
 ---
 
-## ðŸ¤– AI Integration Guidelines
+## 🤖 AI Integration Guidelines
 
 ### Ollama Configuration:
 - Default model: `phi3:mini` (lightweight, CPU-friendly)
@@ -207,7 +221,7 @@ mitch-discord-bot/
 
 ---
 
-## ðŸ“Š Database Management
+## 📊 Database Management
 
 ### SQLite Schema:
 - `games` table: Game library with player counts and categories
@@ -222,7 +236,7 @@ mitch-discord-bot/
 
 ---
 
-## ðŸ§ª Testing Strategy
+## 🧪 Testing Strategy
 
 ### Automated Tests:
 - Run `scripts/test_components.py` before deploying
@@ -241,7 +255,7 @@ mitch-discord-bot/
 
 ---
 
-## ðŸš¨ Git Management
+## 🚨 Git Management
 
 **CRITICAL: User manages Git separately**
 
@@ -259,7 +273,7 @@ Claude's job is to:
 
 ---
 
-## ðŸŽ¯ Discord Bot Best Practices
+## 🎯 Discord Bot Best Practices
 
 ### Message Handling:
 - Always use `async with message.channel.typing()` for long operations
@@ -279,7 +293,7 @@ Claude's job is to:
 
 ---
 
-## ðŸ“¦ Deployment
+## 📦 Deployment
 
 ### SystemD Service:
 - Service file: `docs/mitch.service`
@@ -290,7 +304,7 @@ Claude's job is to:
 ### Updates:
 ```bash
 # On MediaServer
-cd ~/mitch-discord-bot
+cd ~/git/mitch-discord-bot
 git pull
 sudo systemctl restart mitch
 sudo journalctl -u mitch -f  # Watch logs
@@ -298,7 +312,7 @@ sudo journalctl -u mitch -f  # Watch logs
 
 ---
 
-## ðŸŽ­ Personality Guidelines
+## 🎭 Personality Guidelines
 
 Mitch should sound like:
 - A gaming buddy, not a corporate assistant
@@ -320,13 +334,13 @@ Mitch should NOT:
 - "not sure what the vibe is - competitive or co-op?"
 
 **Bad examples:**
-- "I'd be delighted to assist you! ðŸ˜Š"
+- "I'd be delighted to assist you! 😊"
 - "Based on my comprehensive analysis..."
 - "Here are 10 excellent options for your consideration"
 
 ---
 
-## ðŸ“ Documentation Standards
+## 📝 Documentation Standards
 
 ### README.md:
 - Keep concise and scannable
@@ -357,7 +371,7 @@ changes
 
 ---
 
-## ðŸ”® Future Enhancements (Ideas to Keep in Mind)
+## 🔮 Future Enhancements (Ideas to Keep in Mind)
 
 ### Admin Commands (v1.1.0+):
 - `!addgame` - Add game to library
@@ -371,7 +385,7 @@ changes
 - Monitor voice channel changes
 
 ### Reaction Tracking:
-- React âœ… to Mitch's suggestions when you play that game
+- React ✅ to Mitch's suggestions when you play that game
 - Automatically update play history
 - Track suggestion accuracy
 
@@ -385,7 +399,7 @@ Keep code structure flexible to accommodate these!
 
 ---
 
-## ðŸ“‹ Task Completion & File Handoff
+## 📋 Task Completion & File Handoff
 
 When creating tasks for new features:
 
@@ -409,7 +423,7 @@ When creating tasks for new features:
 
 ---
 
-## ðŸŽ® Gaming Group Context
+## 🎮 Gaming Group Context
 
 This bot is built for a small gaming group, not enterprise use. This means:
 - **Small scale**: 5-15 people, not hundreds
@@ -425,7 +439,7 @@ Design decisions should prioritize:
 
 ---
 
-## ðŸš€ Quick Reference
+## 🚀 Quick Reference
 
 **Test everything:**
 ```bash
@@ -454,5 +468,5 @@ python3 scripts/test_ai.py
 
 ---
 
-**Last Updated:** Initial version (v1.0.0)
-**Project Status:** Production-ready, actively maintained
+**Last Updated:** February 2026 (v0.2.0 complete, v1.0.0 in progress)
+**Project Status:** Active development toward v1.0.0
