@@ -10,6 +10,7 @@ import random
 import json
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
+from collections import deque
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,11 @@ class SuggestionEngine:
         self.cooldown_hours = suggestion_config.get('cooldown_hours', 48)
         self.max_suggestions = suggestion_config.get('max_suggestions', 3)
         self.recent_plays_window = suggestion_config.get('recent_plays_window', 7)
+        
+        # Track recently suggested games to avoid repetition
+        # Store tuples of (game_name, timestamp)
+        self.recent_suggestions = deque(maxlen=10)
+        self.suggestion_cooldown_minutes = 5  # Don't suggest same game within 5 min
         
         logger.info(
             f"SuggestionEngine initialized: "
@@ -80,12 +86,17 @@ class SuggestionEngine:
         # Filter games by player count and cooldown
         filtered_games = self._filter_games(player_count, self.cooldown_hours)
         
-        logger.info(f"Filtered to {len(filtered_games)} games after cooldown")
+        # Also filter out recently suggested games (in last 5 minutes)
+        filtered_games = self._filter_recent_suggestions(filtered_games)
+        
+        logger.info(f"Filtered to {len(filtered_games)} games after cooldown and recent suggestions")
         
         # If no games available after filtering, relax cooldown
         if not filtered_games:
-            logger.info("No games available after cooldown, relaxing restrictions")
+            logger.info("No games available after filtering, relaxing restrictions")
             filtered_games = self._get_least_recent_games(player_count)
+            # Still filter out very recently suggested (last 2 min)
+            filtered_games = self._filter_recent_suggestions(filtered_games, minutes=2)
             
             if not filtered_games:
                 # Still no games? Player count might not match anything
@@ -110,15 +121,26 @@ class SuggestionEngine:
                 context=context
             )
             
-            # Record suggestions in database
-            self._record_suggestions(response, filtered_games, context)
+            # Record suggestions in database and memory
+            suggested_game_names = self._record_suggestions(response, filtered_games, context)
+            
+            # Track these suggestions to avoid immediate repetition
+            now = datetime.now()
+            for game_name in suggested_game_names:
+                self.recent_suggestions.append((game_name, now))
             
             return response
             
         except Exception as e:
             logger.error(f"AI generation failed: {e}", exc_info=True)
             # Fallback: simple random suggestion
-            return self._generate_fallback_suggestion(filtered_games)
+            fallback = self._generate_fallback_suggestion(filtered_games)
+            
+            # Track fallback suggestion too
+            for game in filtered_games[:1]:  # Just the first one
+                self.recent_suggestions.append((game['name'], datetime.now()))
+            
+            return fallback
     
     def _filter_games(
         self,
@@ -145,7 +167,6 @@ class SuggestionEngine:
         logger.debug(f"Found {len(matching_games)} games for {player_count} players")
         
         # Get recent plays within cooldown window
-        # Calculate hours as days for recent_plays query (convert hours to days)
         days_back = max(int(cooldown_hours / 24) + 1, self.recent_plays_window)
         recent_plays = self.game_tracker.get_recent_plays(days=days_back)
         
@@ -154,7 +175,6 @@ class SuggestionEngine:
         recent_game_ids = set()
         
         for play in recent_plays:
-            # Parse played_date string to datetime
             played_date = datetime.fromisoformat(play['played_date'].replace('Z', '+00:00'))
             if played_date > cooldown_cutoff:
                 recent_game_ids.add(play['game_id'])
@@ -168,6 +188,45 @@ class SuggestionEngine:
         filtered = [
             game for game in matching_games
             if game['id'] not in recent_game_ids
+        ]
+        
+        return filtered
+    
+    def _filter_recent_suggestions(
+        self,
+        games: List[Dict[str, Any]],
+        minutes: int = 5
+    ) -> List[Dict[str, Any]]:
+        """
+        Filter out games that were suggested very recently.
+        
+        Args:
+            games: List of game dicts to filter
+            minutes: Don't suggest games suggested in last N minutes
+            
+        Returns:
+            list: Games that haven't been suggested recently
+        """
+        if not games:
+            return []
+        
+        # Clean up old suggestions
+        cutoff = datetime.now() - timedelta(minutes=minutes)
+        self.recent_suggestions = deque(
+            [(name, time) for name, time in self.recent_suggestions if time > cutoff],
+            maxlen=10
+        )
+        
+        # Get set of recently suggested game names
+        recent_names = {name.lower() for name, _ in self.recent_suggestions}
+        
+        if recent_names:
+            logger.debug(f"Filtering out recently suggested: {recent_names}")
+        
+        # Filter out recently suggested
+        filtered = [
+            game for game in games
+            if game['name'].lower() not in recent_names
         ]
         
         return filtered
@@ -189,7 +248,7 @@ class SuggestionEngine:
             return []
         
         # Get play history to find when each was last played
-        recent_plays = self.game_tracker.get_recent_plays(days=90)  # Look back 90 days
+        recent_plays = self.game_tracker.get_recent_plays(days=90)
         
         # Build map of game_id -> most recent play date
         last_played = {}
@@ -201,7 +260,6 @@ class SuggestionEngine:
                 last_played[game_id] = played_date
         
         # Sort games by last played date (oldest first)
-        # Games never played get a very old date
         never_played_date = datetime.min
         sorted_games = sorted(
             matching_games,
@@ -221,7 +279,6 @@ class SuggestionEngine:
         Returns:
             str: Friendly message about available player counts
         """
-        # Get all games to see what player counts are available
         all_games = self.game_tracker.get_all_games()
         
         if not all_games:
@@ -259,9 +316,9 @@ class SuggestionEngine:
         # Get recent plays for context
         recent_plays = self.game_tracker.get_recent_plays(days=self.recent_plays_window)
         
-        # Build recent plays summary (most recent first, limited)
+        # Build recent plays summary
         recent_summary = []
-        for play in recent_plays[:5]:  # Top 5 most recent
+        for play in recent_plays[:5]:
             played_date = datetime.fromisoformat(play['played_date'].replace('Z', '+00:00'))
             days_ago = (datetime.now() - played_date).days
             
@@ -286,7 +343,7 @@ class SuggestionEngine:
                     "min_players": g['min_players'],
                     "max_players": g['max_players']
                 }
-                for g in filtered_games[:10]  # Limit to keep prompt size down
+                for g in filtered_games[:10]
             ],
             "recent_plays": recent_summary,
             "requester": requester_name,
@@ -300,9 +357,6 @@ class SuggestionEngine:
         """
         Build complete prompt for AI including context.
         
-        This creates a focused prompt that guides the AI to suggest
-        games from the available list while maintaining Mitch's personality.
-        
         Args:
             context: Context dict from _build_context
             
@@ -313,9 +367,9 @@ class SuggestionEngine:
         filtered_games = context['filtered_games']
         recent_plays = context['recent_plays']
         
-        # Build game list string - just names, no extra info
+        # Build game list string - just names
         game_names = [g['name'] for g in filtered_games]
-        games_str = ", ".join(game_names[:6])  # Top 6 to keep prompt short
+        games_str = ", ".join(game_names[:6])
         
         if len(game_names) > 6:
             games_str += f" (and {len(game_names) - 6} more)"
@@ -329,7 +383,7 @@ class SuggestionEngine:
         else:
             recent_str = "nothing recently"
         
-        # Build a very strict prompt that forces casual style
+        # Very strict prompt
         prompt = f"""you're mitch. someone asks what to play.
 
 {player_count} people online
@@ -357,17 +411,17 @@ respond:"""
         response: str,
         candidate_games: List[Dict[str, Any]],
         context: Dict[str, Any]
-    ):
+    ) -> List[str]:
         """
         Record suggested games in database for analytics.
-        
-        Attempts to parse game names from AI response and record them.
-        Best-effort approach - doesn't fail if parsing fails.
         
         Args:
             response: AI-generated response text
             candidate_games: Games that could have been suggested
             context: Context used for suggestion
+            
+        Returns:
+            list: Game names that were suggested
         """
         try:
             # Extract game names mentioned in response
@@ -390,9 +444,11 @@ respond:"""
                         context=context_json
                     )
             
+            return suggested_games
+            
         except Exception as e:
             logger.warning(f"Failed to record suggestions: {e}")
-            # Don't fail the whole suggestion if recording fails
+            return []
     
     def _extract_game_names(
         self,
@@ -401,8 +457,6 @@ respond:"""
     ) -> List[str]:
         """
         Extract mentioned game names from AI response.
-        
-        Uses best-effort string matching against candidate games.
         
         Args:
             ai_response: AI generated text
@@ -416,8 +470,6 @@ respond:"""
         
         for game in candidate_games:
             game_name_lower = game['name'].lower()
-            
-            # Check if game name appears in response
             if game_name_lower in response_lower:
                 found_games.append(game['name'])
         
@@ -430,8 +482,6 @@ respond:"""
         """
         Generate simple fallback suggestion if AI fails.
         
-        Picks a random game from filtered list and formats a basic message.
-        
         Args:
             filtered_games: List of available games
             
@@ -442,7 +492,7 @@ respond:"""
             return "hmm not sure what to suggest right now"
         
         # Pick random game
-        game = random.choice(filtered_games[:5])  # Top 5 to prefer better matches
+        game = random.choice(filtered_games[:5])
         
         # Simple casual suggestion
         suggestions = [
