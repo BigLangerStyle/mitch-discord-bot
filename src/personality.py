@@ -20,26 +20,29 @@ CRITICAL RULES - FOLLOW EXACTLY:
 2. Never use multiple sentences unless absolutely necessary
 3. Use lowercase and casual language
 4. NO emojis at all
-5. NO corporate language ("I'd be happy to", "What do you think?", etc.)
+5. NO corporate language
 6. NO making up game names - if you don't know, say so
 7. Be honest when you don't have information
 8. Sound like a friend texting, not a customer service bot
+9. DO NOT wrap your response in quotes
 
-GOOD RESPONSES (copy this style):
-"yo"
-"sup?"
-"hmm not sure - co-op or competitive?"
-"idk, what's the vibe?"
-"lol you guys just played that yesterday"
-"maybe something for 4 people?"
+GOOD RESPONSES (copy this exact casual style):
+yo
+sup?
+hmm not sure - co-op or competitive?
+idk, what's the vibe?
+lol you guys just played that yesterday
+maybe something for 4 people?
+not sure what you got
 
 BAD RESPONSES (never do this):
-"Hey everyone! What's got you feeling lucky today?"
-"Alrighty then! How about we get into some action?"
-"I'd be happy to help! What do you think? 🎲"
-"Let me recommend something for your crew size"
+"Hey! How 'bout a quick match?"
+Hey everyone! What's got you feeling lucky today?
+I'd be happy to help! What do you think?
+Let me recommend something for your crew size
+"ready for some gaming fun?"
 
-Remember: You're texting a friend, not writing an essay. Keep it SHORT and CASUAL."""
+Remember: You're texting a friend. Super casual. No quotes. No exclamation marks unless actually excited."""
 
 # Fallback responses if AI is unavailable
 CASUAL_RESPONSES = [
@@ -71,6 +74,7 @@ CORPORATE_PHRASES = [
     r"What's got you",
     r"Ready to",
     r"How about we",
+    r"How 'bout",
     r"Should be",
     r"Just sayin'?\.?",
     r"I hope",
@@ -86,6 +90,7 @@ ENTHUSIASM_PHRASES = [
     r"Awesome!",
     r"Great!",
     r"Exciting!",
+    r"ready for some gaming fun",
 ]
 
 
@@ -157,7 +162,7 @@ class PersonalitySystem:
         
         # Add the actual user message
         prompt_parts.append(f"\nUSER: {user_message}")
-        prompt_parts.append("\nMITCH (respond in under 100 characters, casual, no emojis):")
+        prompt_parts.append("\nMITCH (brief casual response, no quotes, no emojis):")
         
         return "\n".join(prompt_parts)
     
@@ -166,7 +171,7 @@ class PersonalitySystem:
         Polish AI response to keep it casual and brief.
         
         Aggressively removes corporate language, excessive punctuation,
-        emojis, and ensures the response fits Mitch's personality.
+        emojis, quotes, and ensures the response fits Mitch's personality.
         
         Args:
             raw_response: Raw text from AI
@@ -176,10 +181,15 @@ class PersonalitySystem:
         """
         response = raw_response.strip()
         
+        # Remove surrounding quotes (single or double)
+        response = re.sub(r'^["\']|["\']$', '', response)
+        response = re.sub(r'^["\'](.+)["\']$', r'\1', response)
+        
         # Remove everything after certain markers (AI instruction artifacts)
         response = re.split(r'---+', response)[0]  # Remove anything after "---"
         response = re.split(r'\*\*Instruction', response)[0]  # Remove instruction artifacts
         response = re.split(r'USER:', response, flags=re.IGNORECASE)[0]  # Remove if AI repeats prompt
+        response = re.split(r'MITCH:', response, flags=re.IGNORECASE)[0]  # Remove if AI repeats its name
         
         # Remove all emojis completely
         emoji_pattern = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002702-\U000027B0\U000024C2-\U0001F251\u2600-\u26FF\u2700-\u27BF]'
@@ -192,8 +202,10 @@ class PersonalitySystem:
         # Remove common filler words and phrases at the start
         response = re.sub(r'^(?:Well,?|So,?|Hmm,?)\s+', '', response, flags=re.IGNORECASE)
         
+        # Reduce excessive exclamation marks (max 1)
+        response = re.sub(r'!+', '!', response)
+        
         # Clean up excessive punctuation
-        response = re.sub(r'!{2,}', '!', response)  # Multiple ! to single !
         response = re.sub(r'\?{2,}', '?', response)  # Multiple ? to single ?
         response = re.sub(r'\.{4,}', '...', response)  # Multiple . to ...
         response = re.sub(r'[!?]{2,}', '?', response)  # Mixed !? to just ?
@@ -250,13 +262,17 @@ class PersonalitySystem:
         # Final cleanup
         response = response.strip()
         
+        # Remove any remaining quotes that slipped through
+        response = response.strip('"\'')
+        
         # If we somehow ended up with empty response after polishing
         if not response or len(response.strip()) < 3:
             logger.warning("Response too short after polishing, using fallback")
             return self._get_fallback_response()
         
         # If response still seems too formal/long, use fallback
-        if len(response) > 250 or any(phrase in response.lower() for phrase in ['everyone', 'alright', 'should be', 'how about']):
+        formal_indicators = ['everyone', 'alright', 'should be', 'how about', 'ready for']
+        if len(response) > 250 or any(phrase in response.lower() for phrase in formal_indicators):
             logger.warning(f"Response still too formal after polishing: {response[:50]}... using fallback")
             return self._get_fallback_response()
         
