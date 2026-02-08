@@ -125,16 +125,22 @@ class MitchBot:
             )
             
             # Check if user is asking for game suggestions
+            # Expanded list to catch more variations
             content_lower = message.content.lower()
             asking_for_game = any(phrase in content_lower for phrase in [
                 'what should we play',
                 'what should i play',
+                'what should you play',
                 'what to play',
+                'what game',
                 'game suggestion',
                 'suggest a game',
+                'suggest game',
                 'recommend a game',
-                'what game',
-                'game recommend'
+                'recommend game',
+                'game recommend',
+                'pick a game',
+                'choose a game'
             ])
             
             # Show typing indicator while processing

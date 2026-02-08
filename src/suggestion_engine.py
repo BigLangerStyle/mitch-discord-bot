@@ -301,7 +301,7 @@ class SuggestionEngine:
         Build complete prompt for AI including context.
         
         This creates a focused prompt that guides the AI to suggest
-        games from the available list.
+        games from the available list while maintaining Mitch's personality.
         
         Args:
             context: Context dict from _build_context
@@ -312,9 +312,8 @@ class SuggestionEngine:
         player_count = context['player_count']
         filtered_games = context['filtered_games']
         recent_plays = context['recent_plays']
-        requester = context.get('requester', 'someone')
         
-        # Build game list string
+        # Build game list string - just names, no extra info
         game_names = [g['name'] for g in filtered_games]
         games_str = ", ".join(game_names[:6])  # Top 6 to keep prompt short
         
@@ -330,16 +329,26 @@ class SuggestionEngine:
         else:
             recent_str = "nothing recently"
         
-        # Build the prompt
-        prompt = f"""helping decide what to play
+        # Build a very strict prompt that forces casual style
+        prompt = f"""you're mitch. someone asks what to play.
 
-context:
-- {player_count} players
-- available: {games_str}
-- recently played: {recent_str}
-- asking: {requester}
+{player_count} people online
+games available: {games_str}
+recently played: {recent_str}
 
-suggest 1-2 games from the available list. be brief and casual. consider variety from recent plays. under 200 chars."""
+pick 1-2 games from available list. be super casual. under 150 chars. no formal language.
+
+examples of good responses:
+"how about Deep Rock Galactic?"
+"maybe Phasmophobia or Lethal Company"
+"try Valheim, haven't played that in a bit"
+
+examples of BAD responses (never do this):
+"I'd recommend..."
+"hey [name], based on..."
+"checking out..."
+
+respond:"""
         
         return prompt
     
