@@ -125,23 +125,27 @@ class MitchBot:
             )
             
             # Check if user is asking for game suggestions
-            # Expanded list to catch more variations
+            # More flexible keyword matching for natural language
             content_lower = message.content.lower()
-            asking_for_game = any(phrase in content_lower for phrase in [
-                'what should we play',
-                'what should i play',
-                'what should you play',
-                'what to play',
-                'what game',
-                'game suggestion',
-                'suggest a game',
-                'suggest game',
-                'recommend a game',
-                'recommend game',
-                'game recommend',
-                'pick a game',
-                'choose a game'
-            ])
+            
+            # Check if asking for game suggestion (flexible matching)
+            asking_for_game = (
+                # "what ... game/play" (matches: what game, what should we play, what could we play, etc.)
+                ('what' in content_lower and ('play' in content_lower or 'game' in content_lower)) or
+                
+                # "suggest/recommend ... game"
+                (('suggest' in content_lower or 'recommend' in content_lower) and 'game' in content_lower) or
+                
+                # "give me ... game/suggestion"
+                ('give me' in content_lower and ('game' in content_lower or 'suggestion' in content_lower)) or
+                
+                # Direct requests
+                'game suggestion' in content_lower or
+                'pick a game' in content_lower or
+                'choose a game' in content_lower or
+                'any suggestions' in content_lower or
+                'any suggestion' in content_lower
+            )
             
             # Show typing indicator while processing
             async with message.channel.typing():
@@ -149,7 +153,7 @@ class MitchBot:
                 await asyncio.sleep(0.5)
                 
                 if asking_for_game:
-                    logger.info("Detected game suggestion request")
+                    logger.info(f"✓ Detected game suggestion request: '{message.content}'")
                     
                     # Estimate player count from server context
                     player_count = self._estimate_player_count(message)
@@ -167,7 +171,7 @@ class MitchBot:
                     logger.info(f"Suggestion generated ({elapsed:.1f}s)")
                     
                 else:
-                    logger.info("Handling as casual conversation")
+                    logger.info(f"Handling as casual conversation: '{message.content}'")
                     start_time = asyncio.get_event_loop().time()
                     
                     # Generate generic conversational response
