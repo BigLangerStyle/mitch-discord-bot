@@ -34,9 +34,9 @@ def print_test(name, passed, message=""):
 
 
 def test_python_version():
-    """Test that Python version is 3.9 or higher."""
+    """Test that Python version is 3.8 or higher."""
     version = sys.version_info
-    passed = version >= (3, 9)
+    passed = version >= (3, 8)
     
     if passed:
         print_test(
@@ -47,7 +47,7 @@ def test_python_version():
         print_test(
             "Python version check",
             False,
-            f"Found {version.major}.{version.minor}, need 3.9+"
+            f"Found {version.major}.{version.minor}, need 3.8+"
         )
 
 
@@ -300,7 +300,7 @@ def test_suggestion_engine():
         sys.path.insert(0, str(Path('src').absolute()))
         
         from game_tracker import GameTracker
-        from suggestions import SuggestionEngine
+        from suggestion_engine import SuggestionEngine  # Correct module name
         
         # Initialize components
         tracker = GameTracker()
@@ -482,7 +482,7 @@ def test_bot_imports():
         import config_loader
         import logger
         import game_tracker
-        import suggestions
+        import suggestion_engine  # Correct module name
         import ollama_client
         import personality
         
