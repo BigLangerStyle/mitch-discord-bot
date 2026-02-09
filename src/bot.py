@@ -2,7 +2,7 @@
 Mitch Discord Bot - Main Bot Module
 
 Handles Discord connection, event handling, and message responses.
-Currently uses hardcoded responses (AI integration coming in v0.3.0).
+Uses Ollama AI integration for natural gaming buddy personality.
 """
 
 import discord
@@ -10,9 +10,12 @@ from discord.ext import commands
 import asyncio
 import signal
 import sys
-import random
 from config_loader import load_config
 from logger import setup_logging, get_logger
+from ollama_client import OllamaClient
+from personality import PersonalitySystem
+from game_tracker import GameTracker
+from suggestion_engine import SuggestionEngine
 
 # Load configuration first
 config = load_config()
@@ -28,6 +31,19 @@ setup_logging(
 # Get logger for this module
 logger = get_logger(__name__)
 
+# Initialize Ollama client
+ollama_config = config.get('ollama', {})
+ollama_client = OllamaClient(
+    host=ollama_config.get('host', 'http://localhost:11434'),
+    model=ollama_config.get('model', 'phi3:mini'),
+    timeout=ollama_config.get('timeout', 60),
+    temperature=ollama_config.get('temperature', 0.8),
+    max_tokens=ollama_config.get('max_tokens', 300)
+)
+
+# Initialize personality system
+personality = PersonalitySystem(ollama_client)
+
 # Discord intents configuration
 intents = discord.Intents.default()
 intents.message_content = True  # Required to read message content
@@ -38,15 +54,6 @@ intents.members = True  # Required to see server members
 # Create bot client
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Hardcoded casual responses (AI comes in v0.3.0)
-CASUAL_RESPONSES = [
-    "yo what's up?",
-    "hmm not sure yet, still setting up my game library",
-    "I'll have suggestions for you soon, just getting the hang of things",
-    "hey! still learning the ropes here",
-    "sup? still getting my bearings with the game collection",
-]
-
 
 class MitchBot:
     """Main bot class handling Discord events and responses."""
@@ -54,7 +61,23 @@ class MitchBot:
     def __init__(self):
         self.bot = bot
         self.config = config
+        self.personality = personality
         self.shutdown_event = asyncio.Event()
+        
+        # Initialize game tracker
+        self.game_tracker = GameTracker(
+            db_path=config.get('database', {}).get('path', 'data/mitch.db'),
+            config=config
+        )
+        
+        # Initialize suggestion engine
+        self.suggestion_engine = SuggestionEngine(
+            game_tracker=self.game_tracker,
+            personality=personality,
+            config=config
+        )
+        
+        logger.info("MitchBot initialized with suggestion engine")
         
     async def setup(self):
         """Setup bot event handlers."""
@@ -88,33 +111,127 @@ class MitchBot:
         """
         Handle when bot is mentioned in a message.
         
+        Detects if user wants game suggestions and routes to suggestion engine,
+        or uses general AI conversation for casual messages.
+        
         Args:
             message: Discord message object
         """
         try:
             # Log the mention
             logger.info(
-                f"Mentioned by {message.author} in #{message.channel.name}: "
+                f"Mitch mentioned by {message.author} in #{message.channel.name}: "
                 f"{message.content[:100]}"
             )
             
-            # Show typing indicator
+            # Check if user is asking for game suggestions
+            # Expanded list to catch more variations
+            content_lower = message.content.lower()
+            asking_for_game = any(phrase in content_lower for phrase in [
+                'what should we play',
+                'what should i play',
+                'what should you play',
+                'what to play',
+                'what game',
+                'game suggestion',
+                'suggest a game',
+                'suggest game',
+                'recommend a game',
+                'recommend game',
+                'game recommend',
+                'pick a game',
+                'choose a game'
+            ])
+            
+            # Show typing indicator while processing
             async with message.channel.typing():
                 # Small delay to feel more natural
                 await asyncio.sleep(0.5)
                 
-                # Pick a random casual response
-                response = random.choice(CASUAL_RESPONSES)
+                if asking_for_game:
+                    logger.info("Detected game suggestion request")
+                    
+                    # Estimate player count from server context
+                    player_count = self._estimate_player_count(message)
+                    
+                    logger.info(f"Generating suggestion for {player_count} players")
+                    start_time = asyncio.get_event_loop().time()
+                    
+                    # Generate suggestion using suggestion engine
+                    response = await self.suggestion_engine.suggest_games(
+                        player_count=player_count,
+                        requester_name=message.author.name
+                    )
+                    
+                    elapsed = asyncio.get_event_loop().time() - start_time
+                    logger.info(f"Suggestion generated ({elapsed:.1f}s)")
+                    
+                else:
+                    logger.info("Handling as casual conversation")
+                    start_time = asyncio.get_event_loop().time()
+                    
+                    # Generate generic conversational response
+                    response = await self.personality.generate_response(
+                        message.content,
+                        context=None
+                    )
+                    
+                    elapsed = asyncio.get_event_loop().time() - start_time
+                    logger.info(f"AI response received ({elapsed:.1f}s)")
                 
                 # Send response
                 await message.channel.send(response)
                 
-                logger.info(f"Responded with: {response}")
+                logger.info(f"Response sent: {response[:100]}")
                 
         except discord.HTTPException as e:
             logger.error(f"Failed to send message: {e}")
         except Exception as e:
             logger.error(f"Error handling mention: {e}", exc_info=True)
+            # Try to send fallback response
+            try:
+                fallback = self.personality._get_fallback_response()
+                await message.channel.send(fallback)
+                logger.info(f"Sent fallback response: {fallback}")
+            except Exception:
+                logger.error("Failed to send fallback response")
+    
+    def _estimate_player_count(self, message) -> int:
+        """
+        Estimate player count from server context.
+        
+        For now, just count online members in the server.
+        Future: could check voice channels, parse message, etc.
+        
+        Args:
+            message: Discord message object
+            
+        Returns:
+            int: Estimated player count (default to 4 if uncertain)
+        """
+        try:
+            # Count online members (excluding bots)
+            online_members = [
+                m for m in message.guild.members 
+                if m.status != discord.Status.offline and not m.bot
+            ]
+            count = len(online_members)
+            
+            # Clamp to reasonable range
+            if count < 1:
+                count = 4  # Default fallback
+            elif count > 10:
+                count = 10  # Cap at max game size
+                
+            logger.info(
+                f"Estimated {count} players from "
+                f"{len(online_members)} online members"
+            )
+            return count
+            
+        except Exception as e:
+            logger.warning(f"Failed to estimate player count: {e}")
+            return 4  # Safe default
     
     async def start(self):
         """Start the bot with error handling."""

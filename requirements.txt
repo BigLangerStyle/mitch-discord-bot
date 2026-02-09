@@ -1,5 +1,5 @@
 # Mitch Discord Bot - Python Dependencies
-# v0.2.0 - Production-Ready
+# v1.0.0 - Production-Ready with AI Integration
 
 # Discord bot framework (includes aiohttp)
 discord.py==2.3.2
@@ -7,9 +7,8 @@ discord.py==2.3.2
 # YAML configuration parsing
 PyYAML==6.0.1
 
+# HTTP client for Ollama API (included with discord.py, listed for clarity)
+# aiohttp>=3.8.0
+
 # Testing framework
 pytest==7.4.3
-
-# Future dependencies (will be added as features are implemented):
-# - requests (for Ollama API calls in v0.3.0)
-# - aiohttp (already included with discord.py)

@@ -1,7 +1,7 @@
 # Mitch - Your Gaming Buddy Discord Bot
 
-**Version:** 0.2.0 ✅  
-**Status:** Production-Ready Discord Bot - Fully Deployed
+**Version:** 1.0.0 ✅  
+**Status:** Production-Ready with Smart Suggestions
 
 ---
 
@@ -24,6 +24,7 @@ No flashy commands. No enterprise features. Just a chill bot that helps you pick
 **Prerequisites:**
 - Python 3.9+
 - Discord bot token ([Create one here](https://discord.com/developers/applications))
+- **Ollama with phi3:mini model** ([Install Ollama](https://ollama.ai))
 
 **TL;DR:**
 ```bash
@@ -34,9 +35,16 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
+# Install and setup Ollama
+# Visit https://ollama.ai to install for your platform
+ollama pull phi3:mini
+
 # Configure
 cp config/config.yaml.example config/config.yaml
 nano config/config.yaml  # Add your Discord bot token
+
+# Setup game library
+python3 scripts/setup_games.py populate
 
 # Run
 ./run.sh
@@ -48,21 +56,30 @@ User: @Mitch hey
 Mitch: yo what's up?
 
 User: @Mitch what should we play?
-Mitch: hmm not sure yet, still setting up my game library
+Mitch: how about Deep Rock Galactic? you guys haven't touched that in a while
 ```
-
-*(Note: Game suggestions coming in v0.3.0 - currently using hardcoded responses)*
 
 ---
 
-## Features (Planned for v1.0.0)
+## Features (v1.0.0)
 
-- **Smart Game Suggestions**: Mitch knows your library and picks games based on who's online
-- **Play History Tracking**: Remembers what you played recently to avoid repetition
-- **Casual Personality**: Talks like a gaming buddy, not a robot
-- **Lightweight**: Runs on a Raspberry Pi or old laptop
-- **AI-Powered**: Uses local Ollama (phi3:mini) for natural responses
-- **SQLite Database**: Simple, no external database server needed
+- ✅ **Smart Game Suggestions**: Combines AI reasoning with database knowledge
+- ✅ **Player Count Awareness**: Suggests games that fit your group size
+- ✅ **Cooldown System**: Avoids suggesting recently played games
+- ✅ **Game Library Database**: SQLite database for your game collection
+- ✅ **Play History Tracking**: Remembers what you've played recently
+- ✅ **AI-Powered Responses**: Natural conversations using local Ollama (phi3:mini)
+- ✅ **Casual Personality**: Talks like a gaming buddy, not a corporate assistant
+- ✅ **Mention Detection**: Just @Mitch to get suggestions
+- ✅ **Lightweight**: CPU-only inference, runs on modest hardware
+- ✅ **Self-Hosted**: Your data stays on your server
+- ✅ **Graceful Fallbacks**: Works even if AI is slow or offline
+
+**Future Enhancements:**
+- Admin commands for game management (!addgame, !played)
+- Voice channel detection (priority over online members)
+- Reaction-based play tracking
+- Steam library integration
 
 ---
 
@@ -85,24 +102,47 @@ Mitch: hmm not sure yet, still setting up my game library
   - Mention detection and response
   - Hardcoded casual responses
   - Graceful error handling and shutdown
-  - Component tests for validation
 - Task 3: Deployment & Documentation ✅
   - SystemD service for production deployment
   - QUICKSTART.md guide for easy setup
   - Testing utilities (scripts/test_components.py)
   - Final documentation polish
 
-**v0.3.0 (AI Integration)** - 🎯 Next Up
-- Ollama integration with phi3:mini model
-- Natural language response generation
-- Context-aware conversations
-- Personality refinement
+**v1.0.0 (MVP - Complete)** - ✅ All Tasks Complete
+- Task 1: Ollama Integration ✅
+  - Ollama API client for local LLM inference
+  - Personality system with casual gaming buddy character
+  - AI response generation with polishing
+  - Fallback responses when AI unavailable
+  - Interactive testing utility (scripts/test_ai.py)
+- Task 2: Database & Game Tracking ✅
+  - SQLite database with games, play_history, and suggestions tables
+  - GameTracker module for database operations
+  - Game library population script (scripts/setup_games.py)
+  - Database testing utility (scripts/test_database.py)
+  - Comprehensive database documentation (docs/DATABASE.md)
+- Task 3: Smart Suggestions ✅
+  - Suggestion engine combining database + AI
+  - Player count detection from online members
+  - Cooldown system for play history
+  - Context-rich AI prompts
+  - Graceful degradation for edge cases
+  - Interactive testing utility (scripts/test_suggestions.py)
+  - Comprehensive suggestion documentation (docs/SUGGESTIONS.md)
 
-**v1.0.0 (Full Release)** - 🚀 Goal
-- Complete feature set
-- Game library and tracking
-- Smart suggestions based on players
-- Production-ready and stable
+- Task 4: Production Polish & Testing ✅
+  - Enhanced test_components.py with comprehensive checks
+  - health_check.py for production monitoring
+  - Updated systemd service with resource limits and security
+  - DEPLOYMENT.md guide for production deployment
+  - CHANGELOG.md documenting version history
+  - Final documentation polish
+
+**Future Versions** - 📋 Planned
+- Admin commands (!addgame, !played)
+- Voice channel detection
+- Reaction tracking
+- Steam library integration
 
 ---
 
@@ -110,176 +150,318 @@ Mitch: hmm not sure yet, still setting up my game library
 
 - **Language**: Python 3.9+
 - **Discord**: discord.py 2.x
-- **AI**: Ollama (local LLM inference)
-- **Database**: SQLite3
+- **AI**: Ollama (local LLM inference with phi3:mini)
+- **HTTP Client**: aiohttp (included with discord.py)
+- **Database**: SQLite3 with WAL mode
 - **Deployment**: systemd service on Linux
 
 ---
 
 ## Why This Exists
 
-Most Discord bots are either:
-- Over-engineered with features you'll never use
-- Too formal and corporate-feeling
-- Require cloud hosting and monthly fees
-- Built for massive servers, not small friend groups
+I built this for my gaming group. We'd spend 20 minutes trying to decide what to play, scrolling through Steam libraries, going "eh, not that one" over and over. I wanted something simple - a bot that knows our group, remembers what we played, and just suggests something good.
 
-Mitch is different:
-- **Small scale**: 5-15 people, not thousands
-- **Self-hosted**: Run it on your own hardware
-- **Personality**: Feels like a friend, not a tool
-- **Simple**: Does one thing well
+No enterprise features. No fancy dashboards. Just a helpful bot that feels like part of the crew.
 
 ---
 
-## Project Philosophy
-
-1. **Simplicity over features**: Better to do a few things well
-2. **Personality over formality**: Gaming buddies, not corporate assistants
-3. **Self-hosted over cloud**: Your data, your hardware
-4. **Customizable over rigid**: Easy to tweak for your group
-
----
-
-## Quick Links
-
-- **[Setup Guide (QUICKSTART.md)](QUICKSTART.md)** - Get Mitch running in 10 minutes
-- [Contributing](CONTRIBUTING.md) - How to help build Mitch
-- [Development Guide](docs/DEVELOPMENT.md) - Technical details (coming soon)
-- [Project Preferences](.agent/project-preferences.md) - Workflow and conventions
-
----
-
-## Repository Structure
+## Architecture
 
 ```
 mitch-discord-bot/
-├── .agent/                  # Agent workflow preferences
-│   └── project-preferences.md
-├── config/                  # Configuration templates
-│   └── config.yaml.example
-├── data/                    # Runtime data (database, logs)
-├── docs/                    # Additional documentation
-│   └── mitch.service        # SystemD service file
-├── scripts/                 # Utility scripts
-│   └── test_components.py   # Installation test script
-├── src/                     # Source code
-│   ├── bot.py              # Main Discord bot
-│   ├── config_loader.py    # Configuration loading
+├── src/
+│   ├── bot.py              # Main Discord bot with suggestion detection
+│   ├── suggestion_engine.py # Smart game recommendation logic
+│   ├── ollama_client.py    # Ollama API wrapper
+│   ├── personality.py      # Mitch's character & response polishing
+│   ├── game_tracker.py     # Database operations
+│   ├── config_loader.py    # YAML configuration
 │   └── logger.py           # Logging setup
-├── tests/                   # Unit tests (future)
-├── README.md               # You are here
-├── QUICKSTART.md           # Quick setup guide
-├── CONTRIBUTING.md         # Contribution guidelines
-├── LICENSE                 # MIT License
-├── requirements.txt        # Python dependencies
-└── run.sh                  # Startup script
+├── scripts/
+│   ├── setup_games.py      # Populate game library
+│   ├── test_suggestions.py # Interactive suggestion testing
+│   ├── test_database.py    # Database tests
+│   ├── test_ai.py          # Interactive AI testing
+│   ├── test_components.py  # Comprehensive component tests
+│   └── health_check.py     # Production health monitoring
+├── config/
+│   └── config.yaml.example # Configuration template
+├── data/                   # Runtime data (logs, DB)
+├── docs/
+│   ├── DATABASE.md         # Database documentation
+│   ├── SUGGESTIONS.md      # Suggestion algorithm explanation
+│   ├── DEPLOYMENT.md       # Production deployment guide
+│   └── mitch.service       # SystemD service template
+└── requirements.txt        # Python dependencies
 ```
 
 ---
 
-## Testing Your Installation
+## Usage Examples
 
-Before running in production, test your setup:
+**Smart Game Suggestions:**
+```
+User: @Mitch what should we play?
 
+[4 players online, library has 10 games]
+[Filters to 5 games that support 4 players]
+[Removes 2 played in last 48 hours]
+[AI picks from remaining 3]
+
+Mitch: how about Deep Rock Galactic? you guys haven't touched that in a while
+```
+
+**Casual Conversation:**
+```
+User: @Mitch hey
+Mitch: yo what's up?
+
+User: @Mitch how are you
+Mitch: doing good, ready to help you guys pick something to play
+```
+
+**When All Games Are Recent:**
+```
+User: @Mitch game suggestion
+
+[All 4-player games played in last 48h]
+[Suggests least recently played instead]
+
+Mitch: hmm tough call, all your 4-player games were played recently. how about revisiting Overcooked 2?
+```
+
+**Game Library Management:**
 ```bash
-# Run component tests
-python scripts/test_components.py
+# Populate game library with sample games
+$ python3 scripts/setup_games.py populate
+Setting up Mitch's game library...
+✓ Added Phasmophobia (1-4 players, co-op)
+✓ Added Valheim (1-10 players, co-op)
+...
+✓ Library setup complete! Added 16 games.
 
-# Should show:
-# ✓ Python version 3.9+
-# ✓ Required directories exist
-# ✓ Python dependencies installed
-# ✓ Config file exists and loads
-# ✓ Discord token configured
-# ✓ Logger can create log files
-# ✓ Bot modules can be imported
+# List current games
+$ python3 scripts/setup_games.py list
+Games in library: 16
+- Among Us (4-10 players, party)
+- Deep Rock Galactic (1-4 players, co-op)
+...
+
+# Clear library (if needed)
+$ python3 scripts/setup_games.py clear
+Cleared 16 games from library
+```
+
+**Interactive Testing:**
+```bash
+# Test suggestions without Discord
+$ python3 scripts/test_suggestions.py
+
+Mitch Suggestion Testing Utility
+================================
+
+How many players? 4
+
+Filtered games (5):
+- Deep Rock Galactic (co-op, 1-4p)
+- Overcooked 2 (party, 1-4p)
+- Phasmophobia (co-op, 1-4p)
+- Lethal Company (co-op, 1-4p)
+- Plate Up! (party, 1-4p)
+
+⏳ Calling AI...
+✨ Mitch suggests: "how about Deep Rock Galactic? solid for 4"
+
+⏱️  Response time: 3.2s
+
+Record a game as played? (game name or 'n'):
+```
+
+**Database Stats:**
+```bash
+# View suggestion statistics
+$ python3 -c "from src.game_tracker import GameTracker; t = GameTracker(); print(t.get_suggestion_stats())"
+{
+  'total': 15,
+  'accepted': 8,
+  'recent': 7,
+  'most_suggested': [
+    {'name': 'Deep Rock Galactic', 'count': 4},
+    {'name': 'Valheim', 'count': 3}
+  ]
+}
 ```
 
 ---
 
-## Deployment Options
+## Configuration
 
-### Local Development (All Platforms)
+All settings in `config/config.yaml`:
 
-```bash
-source venv/bin/activate  # Windows: venv\Scripts\activate
-./run.sh
+### Suggestion Settings
+```yaml
+suggestions:
+  recent_plays_window: 7    # Days to consider for play history
+  cooldown_hours: 48        # Hours before suggesting same game
+  max_suggestions: 3        # Max games to suggest at once
+  use_player_count: true    # Filter by player count
 ```
 
-### Production (Linux with systemd)
+### AI Settings
+```yaml
+ollama:
+  host: "http://localhost:11434"
+  model: "phi3:mini"
+  temperature: 0.8          # 0.0-1.0 (higher = more creative)
+  max_tokens: 300           # Keep responses concise
+  timeout: 60               # Request timeout in seconds
+```
 
+### Database Settings
+```yaml
+database:
+  path: "data/mitch.db"
+  foreign_keys: true
+  journal_mode: "WAL"       # Better concurrency
+```
+
+---
+
+## How Suggestions Work
+
+When you ask "what should we play?", Mitch:
+
+1. **Detects suggestion request** - Checks for keywords
+2. **Estimates player count** - Counts online members
+3. **Filters by player count** - Queries games that support your group size
+4. **Applies cooldown** - Removes games played in last 48 hours (configurable)
+5. **Builds AI context** - Creates prompt with available games and recent history
+6. **Generates suggestion** - AI picks 1-2 games and explains why
+7. **Records suggestion** - Saves to database for analytics
+
+**For details:** See [docs/SUGGESTIONS.md](docs/SUGGESTIONS.md)
+
+---
+
+## Development
+
+**Project uses feature branches:**
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/your-feature
+# Make changes, commit
+git push origin feature/your-feature
+# Create PR to main
+```
+
+**Testing before commit:**
+```bash
+# Test all components
+python3 scripts/test_components.py
+
+# Test suggestions interactively
+python3 scripts/test_suggestions.py
+
+# Test AI responses
+python3 scripts/test_ai.py
+
+# Test database operations
+python3 scripts/test_database.py
+```
+
+**For full development guidelines:** See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+
+## Deployment
+
+**Run as systemd service (recommended):**
 ```bash
 # Copy service file
 sudo cp docs/mitch.service /etc/systemd/system/
+
+# Edit paths and user
+sudo nano /etc/systemd/system/mitch.service
 
 # Enable and start
 sudo systemctl enable mitch
 sudo systemctl start mitch
 
-# Check status and logs
+# Check status
 sudo systemctl status mitch
 sudo journalctl -u mitch -f
 ```
 
-See [QUICKSTART.md](QUICKSTART.md) for detailed deployment instructions.
+**Manual run (for testing):**
+```bash
+./run.sh
+# or
+python3 src/bot.py
+```
 
 ---
 
-## What's Next?
+## Troubleshooting
 
-After v0.2.0 is deployed and stable:
+**"Game library is empty"**
+```bash
+python3 scripts/setup_games.py populate
+```
 
-**v0.3.0 - AI Integration**
-- Connect to local Ollama instance
-- Natural language understanding
-- Context-aware responses
-- Personality refinement
+**Ollama connection failed**
+```bash
+# Check if Ollama is running
+ollama serve
 
-**v0.4.0 - Game Tracking**
-- SQLite database setup
-- Game library management
-- Play history tracking
-- Admin commands (!addgame, !played)
+# Verify model is downloaded
+ollama pull phi3:mini
+```
 
-**v1.0.0 - Smart Suggestions**
-- Player-count based filtering
-- Recent play history consideration
-- Voice channel awareness
-- Full gaming buddy experience
+**Bot not responding to mentions**
+- Check Discord bot has "Message Content Intent" enabled in Developer Portal
+- Verify bot has "Read Messages" and "Send Messages" permissions
+- Check logs: `tail -f data/mitch.log`
 
-Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md).
+**Suggestions seem random**
+- Check if play history is being recorded
+- Adjust cooldown in config (may be too aggressive)
+- Verify game library has games: `python3 scripts/setup_games.py list`
 
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**AI responses too slow**
+- Normal on slower CPUs (3-15 seconds is expected)
+- Increase timeout in config if needed
+- MediaServer: Expect 5-20s for suggestions
 
 ---
 
 ## Contributing
 
-Contributions are welcome! This is a hobby project for a small gaming group, but if you find it useful, feel free to:
+Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Code style guidelines
+- Branch naming conventions
+- Testing requirements
+- PR process
 
-- Report bugs
-- Suggest features
-- Submit pull requests
-- Fork and customize for your group
+---
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+## License
+
+MIT License - See [LICENSE](LICENSE)
 
 ---
 
 ## Acknowledgments
 
-Built with:
-- [discord.py](https://discordpy.readthedocs.io/) - Discord API wrapper
-- [Ollama](https://ollama.ai/) - Local LLM inference
-- Love for gaming and good friends
+- Built for my gaming group who kept asking "what should we play?"
+- Powered by [Ollama](https://ollama.ai) for local AI inference
+- Uses [discord.py](https://discordpy.readthedocs.io/) for Discord integration
+- Inspired by the universal struggle of indecisive gamers everywhere
 
 ---
 
-**Status**: v0.2.0 complete - Production-ready Discord bot foundation
+**Version History:** See [CHANGELOG.md](CHANGELOG.md) for detailed release notes.
 
-**Last Updated**: February 2026
+---
+
+**Questions?** Open an issue or check the [docs/](docs/) directory for detailed documentation.
