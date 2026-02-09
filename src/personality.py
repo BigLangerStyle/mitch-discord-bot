@@ -105,6 +105,9 @@ CORPORATE_PHRASES = [
     r"so why not",
     r"let's go with",
     r"Just picked up",
+    r"jump into",
+    r"see who can",
+    r"see if you",
 ]
 
 # Overly enthusiastic phrases to remove
@@ -358,6 +361,12 @@ class PersonalitySystem:
         chatty_words = ['just', 'pretty', 'really', 'actually', 'totally', 'definitely']
         if any(word in response_lower for word in chatty_words):
             logger.debug(f"Chatty word detected")
+            return True
+        
+        # Reject if mentions game AND asks a question (too elaborate)
+        # e.g. "jump into X and see who can survive?"
+        if '?' in response and ' and ' in response_lower:
+            logger.debug("Question with elaboration detected")
             return True
         
         return False
