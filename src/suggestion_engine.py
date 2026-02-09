@@ -89,7 +89,9 @@ class SuggestionEngine:
         # Also filter out recently suggested games (in last 5 minutes)
         filtered_games = self._filter_recent_suggestions(filtered_games)
         
-        logger.info(f"Filtered to {len(filtered_games)} games after cooldown and recent suggestions")
+        logger.info(f"Filtered {len(filtered_games)} games for {player_count} players")
+        if filtered_games:
+            logger.info(f"Games: {[g['name'] for g in filtered_games[:10]]}")
         
         # If no games available after filtering, relax cooldown
         if not filtered_games:
@@ -112,7 +114,7 @@ class SuggestionEngine:
         # Build prompt for AI
         prompt = self._build_prompt(context)
         
-        logger.debug(f"Built prompt: {prompt[:200]}...")
+        logger.debug(f"Building AI prompt with context...")
         
         # Generate AI response with fallback
         try:
@@ -233,45 +235,44 @@ class SuggestionEngine:
     
     def _get_least_recent_games(self, player_count: int) -> List[Dict[str, Any]]:
         """
-        Get least recently played games when cooldown filters out everything.
+        Get games for this player count sorted by least recently played.
+        
+        Used as fallback when all games are in cooldown.
         
         Args:
             player_count: Number of players
             
         Returns:
-            list: Games sorted by last played (least recent first)
+            list: Games sorted by play history (least recent first)
         """
-        # Get all games for player count
         matching_games = self.game_tracker.get_games_for_players(player_count)
         
         if not matching_games:
             return []
         
-        # Get play history to find when each was last played
-        recent_plays = self.game_tracker.get_recent_plays(days=90)
+        # Get all play history
+        recent_plays = self.game_tracker.get_recent_plays(days=365)
         
-        # Build map of game_id -> most recent play date
+        # Build dict of game_id -> last played timestamp
         last_played = {}
         for play in recent_plays:
             game_id = play['game_id']
-            played_date = datetime.fromisoformat(play['played_date'].replace('Z', '+00:00'))
-            
-            if game_id not in last_played or played_date > last_played[game_id]:
-                last_played[game_id] = played_date
+            if game_id not in last_played:
+                last_played[game_id] = play['played_date']
         
-        # Sort games by last played date (oldest first)
-        never_played_date = datetime.min
-        sorted_games = sorted(
-            matching_games,
-            key=lambda g: last_played.get(g['id'], never_played_date)
-        )
+        # Sort games by last played (never played first, then oldest)
+        def sort_key(game):
+            if game['id'] not in last_played:
+                return ""  # Never played - put first
+            return last_played[game['id']]
         
-        # Return top N least recent
-        return sorted_games[:self.max_suggestions]
+        sorted_games = sorted(matching_games, key=sort_key)
+        
+        return sorted_games
     
     def _handle_no_matching_games(self, player_count: int) -> str:
         """
-        Generate message when no games match player count.
+        Generate response when no games match the player count.
         
         Args:
             player_count: Requested player count
@@ -367,12 +368,12 @@ class SuggestionEngine:
         filtered_games = context['filtered_games']
         recent_plays = context['recent_plays']
         
-        # Build game list string - just names
+        # Build game list string - just names, make it very clear
         game_names = [g['name'] for g in filtered_games]
-        games_str = ", ".join(game_names[:6])
+        games_str = ", ".join(game_names[:10])
         
-        if len(game_names) > 6:
-            games_str += f" (and {len(game_names) - 6} more)"
+        if len(game_names) > 10:
+            games_str += f" (and {len(game_names) - 10} more)"
         
         # Build recent plays string
         if recent_plays:
@@ -383,26 +384,35 @@ class SuggestionEngine:
         else:
             recent_str = "nothing recently"
         
-        # Very strict prompt
-        prompt = f"""you're mitch. someone asks what to play.
+        # Very explicit prompt - AI must name specific games
+        prompt = f"""You're Mitch helping pick a game.
 
-{player_count} people online
-games available: {games_str}
-recently played: {recent_str}
+{player_count} people online.
 
-pick 1-2 games from available list. be super casual. under 150 chars. no formal language.
+AVAILABLE GAMES (choose from these ONLY):
+{games_str}
 
-examples of good responses:
+Recently played (avoid these):
+{recent_str}
+
+YOUR JOB: Pick 1-2 games from the AVAILABLE GAMES list above. Say the actual game names.
+
+Be brief and casual. Under 200 chars. No formal language.
+
+GOOD examples:
 "how about Deep Rock Galactic?"
 "maybe Phasmophobia or Lethal Company"
-"try Valheim, haven't played that in a bit"
+"Deep Rock's been a while, that could be fun"
+"try Valheim - haven't played that in a bit"
 
-examples of BAD responses (never do this):
+BAD examples (NEVER do this):
 "I'd recommend..."
 "hey [name], based on..."
 "checking out..."
+"what do you like?"
+"hey peeps"
 
-respond:"""
+Respond NOW with specific game names:"""
         
         return prompt
     

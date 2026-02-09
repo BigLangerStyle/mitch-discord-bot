@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-02-09
+
+### Fixed
+
+**Suggestion Detection** - Fixed critical bug where game requests weren't recognized
+- Replaced strict phrase matching with flexible keyword detection
+- Now recognizes natural variations: "what game could we play", "give me a good co-op game", "any suggestions?"
+- Previously only matched exact phrases like "what should we play"
+
+**AI Prompt Clarity** - Strengthened prompt to ensure specific game suggestions
+- AI now explicitly instructed to name specific games from available list
+- Added clear examples of good vs bad responses in prompt
+- Reduced vague responses like "hey peeps" or "what do you like"
+
+**Logging Improvements** - Added debug logging for production troubleshooting
+- Bot now logs whether message was detected as suggestion request or casual chat
+- Suggestion engine logs filtered game list for debugging
+- Makes production diagnosis much easier
+
+### Technical Details
+
+**What Changed in `src/bot.py`:**
+- Replaced `any(phrase in content_lower)` with flexible keyword matching
+- Now checks for keyword combinations: `'what' + 'play'`, `'suggest' + 'game'`, `'give me' + 'game'`, etc.
+- Added clear log messages: `"✓ Detected game suggestion request"` vs `"Handling as casual conversation"`
+
+**What Changed in `src/suggestion_engine.py`:**
+- Enhanced AI prompt with explicit "AVAILABLE GAMES (choose from these ONLY)" section
+- Added clear examples of good vs bad responses
+- Prompt now says "Respond NOW with specific game names" to force concrete suggestions
+- Added logging of filtered game list for debugging
+
+**Before Fix (v1.0.0):**
+```
+User: "what game could we play?"
+Log: "Handling as casual conversation"  ❌
+Bot: "hey what do u wanna play tonight?"  ❌
+```
+
+**After Fix (v1.0.1):**
+```
+User: "what game could we play?"
+Log: "✓ Detected game suggestion request"  ✓
+Log: "Generating suggestion for 4 players"  ✓
+Log: "Games: ['Deep Rock Galactic', 'Overcooked 2', ...]"  ✓
+Bot: "how about Deep Rock Galactic or Lethal Company? both good for 4"  ✓
+```
+
+---
+
 ## [1.0.0] - 2026-02-08
 
 ### Added
@@ -141,6 +191,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Notes
 
+### v1.0.1 - Critical Bug Fix 🔧
+
+**This patch fixes a critical bug in v1.0.0** where the bot wasn't detecting game suggestion requests properly.
+
+#### What Was Broken
+
+In v1.0.0, Mitch would treat almost ALL messages as casual conversation instead of game suggestions:
+- ❌ "what game could we play" → casual chat (should be suggestion)
+- ❌ "give me a good co-op game" → casual chat (should be suggestion)
+- ❌ "any suggestions?" → casual chat (should be suggestion)
+
+Only exact phrase matches like "what should we play" worked.
+
+#### What's Fixed
+
+Now recognizes natural language variations:
+- ✅ "what game could we play" → suggestion ✓
+- ✅ "what game should we play tonight" → suggestion ✓
+- ✅ "give me a good game" → suggestion ✓
+- ✅ "suggest a co-op game" → suggestion ✓
+- ✅ "any suggestions?" → suggestion ✓
+- ✅ "recommend a game for us" → suggestion ✓
+
+AI also gives more specific game names instead of vague responses.
+
+#### Upgrading from v1.0.0
+
+```bash
+# 1. Pull latest code
+git pull origin main
+
+# 2. Restart bot
+sudo systemctl restart mitch
+
+# 3. Test in Discord
+@Mitch what game could we play?
+# Should now get actual game suggestions!
+
+# 4. Check logs to verify
+sudo journalctl -u mitch -f
+# Should see "✓ Detected game suggestion request"
+```
+
+No config changes needed - this is a pure bug fix.
+
+---
+
 ### v1.0.0 - Full Production Release 🎉
 
 **Mitch is now production-ready!** This release includes everything needed to deploy and run Mitch in a production environment.
@@ -239,7 +336,7 @@ If you're upgrading from v0.2.0:
 
 ## What's Next?
 
-**v1.0.0 is focused on core functionality done right.** Future versions may add:
+**v1.0.1 was a critical bug fix.** v1.0.0 established core functionality done right. Future versions may add:
 
 ### Potential v1.1.0 Features (If Requested)
 
@@ -255,7 +352,7 @@ If you're upgrading from v0.2.0:
 - **Web Dashboard** - View stats and manage games via web UI
 - **Advanced Suggestions** - Machine learning for better recommendations
 
-**Current focus:** Ensure v1.0.0 is rock-solid and meets user needs before adding extras.
+**Current focus:** Ensure v1.0.1 is rock-solid and meets user needs before adding extras.
 
 ---
 
