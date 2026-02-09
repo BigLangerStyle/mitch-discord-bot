@@ -300,11 +300,15 @@ def test_suggestion_engine():
         sys.path.insert(0, str(Path('src').absolute()))
         
         from game_tracker import GameTracker
-        from suggestion_engine import SuggestionEngine  # Correct module name
+        from suggestion_engine import SuggestionEngine
+        from personality import Personality
+        from config_loader import load_config
         
-        # Initialize components
+        # Initialize components with required dependencies
+        config = load_config()
         tracker = GameTracker()
-        engine = SuggestionEngine(tracker)
+        personality = Personality(config)
+        engine = SuggestionEngine(tracker, personality, config)
         
         # Test filtering logic
         games = tracker.get_games_for_player_count(4)
