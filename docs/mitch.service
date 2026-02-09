@@ -1,7 +1,8 @@
 [Unit]
 Description=Mitch Discord Bot - Gaming Buddy
-After=network-online.target
+After=network-online.target ollama.service
 Wants=network-online.target
+Requires=ollama.service
 
 [Service]
 Type=simple
@@ -9,26 +10,34 @@ User=plexor
 Group=plexor
 WorkingDirectory=/home/plexor/git/mitch-discord-bot
 
-# Use virtual environment Python
+# Environment
+Environment="PATH=/home/plexor/git/mitch-discord-bot/venv/bin:/usr/local/bin:/usr/bin:/bin"
+
+# Start command
 ExecStart=/home/plexor/git/mitch-discord-bot/venv/bin/python3 src/bot.py
 
-# Restart policy
-Restart=always
+# Restart policy - only restart on failures, not on normal exit
+Restart=on-failure
 RestartSec=10
+StartLimitInterval=5min
+StartLimitBurst=3
 
-# Resource limits
+# Resource limits - appropriate for MediaServer (i3-3225, 8GB RAM, shared system)
 CPUQuota=25%
 MemoryMax=2G
-MemoryHigh=1.8G
+MemoryHigh=1.5G
 
 # Logging
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=mitch
 
-# Security hardening
+# Security hardening (optional but recommended)
 NoNewPrivileges=true
 PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/plexor/git/mitch-discord-bot/data
 
 [Install]
 WantedBy=multi-user.target
