@@ -3,12 +3,13 @@ Mitch's personality system and response generation.
 
 Defines Mitch's character as a casual gaming buddy and handles
 AI response generation with appropriate polishing.
+Version 1.1.0: Added casual_response() for conversational AI
 """
 
 import logging
 import random
 import re
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,38 @@ Let me recommend something for your crew size
 "ready for some gaming fun?"
 
 Remember: You're texting a friend. Super casual. No quotes. No exclamation marks unless actually excited."""
+
+# Casual conversation system prompt (v1.1.0)
+CASUAL_SYSTEM_PROMPT = """You are Mitch, a casual gaming buddy chatting with friends in Discord.
+
+CRITICAL RULES:
+1. Keep responses VERY brief - 1-2 sentences max, under 300 characters
+2. Use lowercase and casual language
+3. NO emojis at all
+4. NO corporate language ("I'd be happy to", "Allow me", etc.)
+5. Sound like a friend texting, not a customer service bot
+6. Be natural and contextual - reference recent conversation if relevant
+7. Don't be overly helpful or formal
+8. It's OK to be brief, vague, or even slightly sarcastic
+
+GOOD CASUAL RESPONSES:
+yo what's up?
+not much, just chillin
+lol nice
+yeah that sounds cool
+idk man, what do you think?
+haha yeah for sure
+nah not really
+yeah i feel you
+
+BAD RESPONSES (never do this):
+I'd be happy to chat with you!
+How are you doing today? :)
+That's wonderful to hear!
+Let me help you with that
+I hope you're having a great day!
+
+Remember: You're just chatting. Be brief, be real, be casual."""
 
 # Fallback responses if AI is unavailable
 CASUAL_RESPONSES = [
@@ -131,7 +164,67 @@ class PersonalitySystem:
             ollama_client: OllamaClient instance for AI generation
         """
         self.ollama = ollama_client
-        logger.info("Personality system initialized")
+        logger.info("Personality system v1.1.0 initialized")
+    
+    async def casual_response(
+        self, 
+        user_message: str, 
+        requester_name: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None
+    ) -> str:
+        """
+        Generate a casual conversational response (v1.1.0).
+        
+        This is used for general chat, not game suggestions.
+        
+        Args:
+            user_message: The user's message
+            requester_name: Name of the person messaging
+            conversation_history: List of recent messages [{"author": "Name", "content": "msg"}, ...]
+            
+        Returns:
+            Casual response text
+        """
+        try:
+            logger.info(f"Generating casual response for {requester_name}")
+            
+            # Build conversation prompt
+            prompt_parts = [CASUAL_SYSTEM_PROMPT]
+            
+            # Add conversation context if available
+            if conversation_history and len(conversation_history) > 0:
+                prompt_parts.append("\nRecent conversation:")
+                for msg in conversation_history[-5:]:  # Last 5 messages max
+                    author = msg.get("author", "Unknown")
+                    content = msg.get("content", "")
+                    prompt_parts.append(f"{author}: {content}")
+            
+            # Add current message
+            prompt_parts.append(f"\n{requester_name}: {user_message}")
+            prompt_parts.append("\nMitch (brief casual response, no quotes, no emojis):")
+            
+            full_prompt = "\n".join(prompt_parts)
+            
+            # Generate AI response
+            raw_response = await self.ollama.generate(full_prompt)
+            
+            # Polish with light filtering (not strict like suggestions)
+            polished = self._polish_response(raw_response, strict=False)
+            
+            # Enforce max length for casual chat
+            if len(polished) > 300:
+                # Truncate to first sentence if too long
+                sentences = re.split(r'[.!?]\s+', polished)
+                polished = sentences[0]
+                if not polished.endswith(('?', '!', '...')):
+                    polished = polished.rstrip('.')
+            
+            logger.info(f"Casual response generated: {len(polished)} chars")
+            return polished
+            
+        except Exception as e:
+            logger.warning(f"Casual response generation failed: {e}, using fallback")
+            return self._get_fallback_response()
     
     async def generate_response(self, user_message: str, context: Optional[Dict[str, Any]] = None) -> str:
         """

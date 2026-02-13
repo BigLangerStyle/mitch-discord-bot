@@ -3,6 +3,7 @@ Mitch Discord Bot - Main Bot Module
 
 Handles Discord connection, event handling, and message responses.
 Uses Ollama AI integration for natural gaming buddy personality.
+Version 1.1.0: Full conversational AI with context tracking
 """
 
 import discord
@@ -10,6 +11,8 @@ from discord.ext import commands
 import asyncio
 import signal
 import sys
+import time
+from collections import defaultdict, deque
 from config_loader import load_config
 from logger import setup_logging, get_logger
 from ollama_client import OllamaClient
@@ -77,7 +80,24 @@ class MitchBot:
             config=config
         )
         
-        logger.info("MitchBot initialized with suggestion engine")
+        # Conversation context tracking (v1.1.0)
+        # Maps channel_id -> deque of recent messages
+        # Format: {"author": "Username", "content": "message text"}
+        conversation_config = config.get('conversation', {})
+        self.context_size = conversation_config.get('context_messages', 5)
+        self.conversation_history = defaultdict(lambda: deque(maxlen=self.context_size))
+        
+        # Rate limiting (v1.1.0)
+        # Maps user_id -> timestamp of last interaction
+        rate_limit_config = config.get('rate_limiting', {})
+        self.rate_limit_enabled = rate_limit_config.get('enabled', False)
+        self.rate_limit_cooldown = rate_limit_config.get('cooldown_seconds', 5)
+        self.rate_limit_message = rate_limit_config.get('message', 'whoa slow down a sec!')
+        self.last_interaction = {}
+        
+        logger.info("MitchBot v1.1.0 initialized with conversation tracking")
+        logger.info(f"Context tracking: {self.context_size} messages per channel")
+        logger.info(f"Rate limiting: {'enabled' if self.rate_limit_enabled else 'disabled'}")
         
     async def setup(self):
         """Setup bot event handlers."""
@@ -100,12 +120,68 @@ class MitchBot:
             if message.author == self.bot.user:
                 return
             
+            # Track message in conversation history (v1.1.0)
+            # Only track messages in channels where bot is mentioned
+            # This keeps memory usage low
+            if self.bot.user in message.mentions or len(self.conversation_history.get(message.channel.id, [])) > 0:
+                self._add_to_context(message)
+            
             # Check if bot was mentioned
             if self.bot.user in message.mentions:
                 await self._handle_mention(message)
             
             # Process commands (for future use)
             await self.bot.process_commands(message)
+    
+    def _add_to_context(self, message):
+        """
+        Add message to conversation context.
+        
+        Args:
+            message: Discord message object
+        """
+        # Format: simple author + content for context
+        context_entry = {
+            "author": message.author.display_name,
+            "content": message.content.replace(f'<@{self.bot.user.id}>', 'Mitch').strip()
+        }
+        
+        self.conversation_history[message.channel.id].append(context_entry)
+        
+    def _get_conversation_context(self, channel_id) -> list:
+        """
+        Get recent conversation context for a channel.
+        
+        Args:
+            channel_id: Discord channel ID
+            
+        Returns:
+            List of recent messages (oldest to newest)
+        """
+        return list(self.conversation_history.get(channel_id, []))
+    
+    def _check_rate_limit(self, user_id: int) -> bool:
+        """
+        Check if user is rate limited.
+        
+        Args:
+            user_id: Discord user ID
+            
+        Returns:
+            True if rate limited (too fast), False if OK
+        """
+        if not self.rate_limit_enabled:
+            return False
+        
+        now = time.time()
+        last_time = self.last_interaction.get(user_id, 0)
+        
+        if now - last_time < self.rate_limit_cooldown:
+            return True
+        
+        # Update last interaction time
+        self.last_interaction[user_id] = now
+        return False
     
     async def _handle_mention(self, message):
         """
@@ -118,6 +194,12 @@ class MitchBot:
             message: Discord message object
         """
         try:
+            # Check rate limiting (v1.1.0)
+            if self._check_rate_limit(message.author.id):
+                logger.info(f"Rate limited user {message.author.name}")
+                await message.channel.send(self.rate_limit_message)
+                return
+            
             # Log the mention
             logger.info(
                 f"Mitch mentioned by {message.author} in #{message.channel.name}: "
@@ -171,13 +253,18 @@ class MitchBot:
                     logger.info(f"Suggestion generated ({elapsed:.1f}s)")
                     
                 else:
+                    # v1.1.0: Casual conversation with context
                     logger.info(f"Handling as casual conversation: '{message.content}'")
                     start_time = asyncio.get_event_loop().time()
                     
-                    # Generate generic conversational response
-                    response = await self.personality.generate_response(
+                    # Get conversation context
+                    context = self._get_conversation_context(message.channel.id)
+                    
+                    # Generate conversational response with context
+                    response = await self.personality.casual_response(
                         message.content,
-                        context=None
+                        requester_name=message.author.display_name,
+                        conversation_history=context
                     )
                     
                     elapsed = asyncio.get_event_loop().time() - start_time
@@ -249,7 +336,7 @@ class MitchBot:
                 )
                 sys.exit(1)
             
-            logger.info("Starting Mitch Discord Bot...")
+            logger.info("Starting Mitch Discord Bot v1.1.0...")
             await self.bot.start(token)
             
         except discord.LoginFailure:

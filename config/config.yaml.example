@@ -1,5 +1,5 @@
 # Mitch Discord Bot - Configuration Template
-# Version: 0.1.0
+# Version: 1.1.0
 # 
 # INSTRUCTIONS:
 # 1. Copy this file to config/config.yaml
@@ -111,6 +111,36 @@ personality:
   
   # Maximum response length (characters)
   max_response_length: 500
+
+# ===================================
+# Conversation Settings (v1.1.0)
+# ===================================
+conversation:
+  # Number of recent messages to include as context
+  # Keeps conversation flow natural and contextual
+  context_messages: 5
+  
+  # Maximum response length for casual chat (characters)
+  # Shorter than suggestions to keep chat snappy
+  casual_max_length: 300
+  
+  # Use light response polishing for casual chat
+  # (strict polishing is still used for game suggestions)
+  casual_light_polish: true
+
+# ===================================
+# Rate Limiting (v1.1.0)
+# ===================================
+rate_limiting:
+  # Enable rate limiting to prevent spam
+  # Recommended: false for small friend groups, true for larger servers
+  enabled: false
+  
+  # Minimum seconds between @mentions per user
+  cooldown_seconds: 5
+  
+  # Message to send when rate limited
+  message: "whoa slow down a sec!"
 
 # ===================================
 # Feature Flags (enable/disable features)
