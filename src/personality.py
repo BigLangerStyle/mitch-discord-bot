@@ -206,7 +206,7 @@ class PersonalitySystem:
             
             # Add current message
             prompt_parts.append(f"\n{requester_name}: {user_message}")
-            prompt_parts.append("\nMitch (brief casual response, no quotes, no emojis):")
+            prompt_parts.append("\nRespond as Mitch:")
             
             full_prompt = "\n".join(prompt_parts)
             
@@ -325,6 +325,28 @@ class PersonalitySystem:
         response = re.split(r'\*\*Instruction', response)[0]
         response = re.split(r'USER:', response, flags=re.IGNORECASE)[0]
         response = re.split(r'MITCH:', response, flags=re.IGNORECASE)[0]
+        
+        # Remove leaked conversation context (v1.1.0 fix)
+        # Sometimes the AI echoes back the conversation history
+        response = re.sub(r'^.*?Recent conversation:.*?\n', '', response, flags=re.IGNORECASE | re.DOTALL)
+        response = re.sub(r'^.*?\(brief.*?response.*?\)', '', response, flags=re.IGNORECASE)
+        response = re.sub(r'^.*?Respond as Mitch:', '', response, flags=re.IGNORECASE)
+        
+        # Remove any leading author labels from leaked context
+        # Format: "Author: message Mitch: response" -> just keep response
+        if ':' in response and len(response) > 0:
+            # Check if it starts with "Name: " pattern (leaked context)
+            parts = response.split('\n', 1)
+            first_line = parts[0]
+            if re.match(r'^[A-Za-z_]+\s*:', first_line):
+                # Find last occurrence of name pattern before actual response
+                last_colon_match = None
+                for match in re.finditer(r'\b(Mitch|[A-Z][a-z]+)\s*:', response):
+                    last_colon_match = match
+                
+                if last_colon_match and last_colon_match.group(1).lower() == 'mitch':
+                    # Take everything after "Mitch:"
+                    response = response[last_colon_match.end():].strip()
         
         # Remove AI self-references and disclaimers (v1.1.0 fix)
         # phi3:mini sometimes adds weird Microsoft/AI disclaimers
