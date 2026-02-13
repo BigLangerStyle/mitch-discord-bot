@@ -326,8 +326,17 @@ class PersonalitySystem:
         response = re.split(r'USER:', response, flags=re.IGNORECASE)[0]
         response = re.split(r'MITCH:', response, flags=re.IGNORECASE)[0]
         
+        # Remove AI self-references and disclaimers (v1.1.0 fix)
+        # phi3:mini sometimes adds weird Microsoft/AI disclaimers
+        response = re.sub(r'\(Note:.*?\)', '', response, flags=re.IGNORECASE | re.DOTALL)
+        response = re.sub(r'Note:.*', '', response, flags=re.IGNORECASE)
+        response = re.sub(r"I'm an AI.*", '', response, flags=re.IGNORECASE)
+        response = re.sub(r'created by (Microsoft|OpenAI|Anthropic|Google).*', '', response, flags=re.IGNORECASE)
+        response = re.sub(r'Remember that I.*', '', response, flags=re.IGNORECASE)
+        response = re.sub(r'actual interactions.*', '', response, flags=re.IGNORECASE)
+        
         # Remove emojis
-        emoji_pattern = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002702-\U000027B0\U000024C2-\U0001F251\u2600-\u26FF\u2700-\u27BF]'
+        emoji_pattern = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002702-\U000027B0\U000024C2-\U0001F251\u2600-\u26FF\u2700-\u27BF:)]'
         response = re.sub(emoji_pattern, '', response)
         
         # Remove corporate phrases (always)
