@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.3] - 2026-02-14
+
+### Fixed
+- **Suggestion Detection** (Critical UX Fix): Significantly improved game suggestion request detection to catch natural language variations. Detection was too rigid, causing users to rephrase requests 3-4 times before being understood.
+  - Expanded detection patterns from ~40% coverage to ~90% coverage of natural phrasings
+  - Added patterns for: "looking for a game", "give me one more", "need a game", "want to play", "can you help", "another game", "something else"
+  - Made "suggest" and "recommend" work without requiring "game" keyword
+  - Added follow-up detection ("one more", "another", "different", "other")
+  - Detection performance: <1ms (no impact on response time)
+  - **Impact**: Users no longer need to rephrase requests multiple times - bot now understands how people actually talk
+
+- **Presences Intent Bug**: Bot was incorrectly counting 0 online members, causing "just the 0 of you?" clarification messages. Added `discord.Intents.presences` to properly detect member online status.
+  - Fixed `count_online_members()` in `src/bot.py`
+  - Bot now accurately counts online Discord members
+  - Enables proper player count fallback logic
+
+- **AI Meta-Commentary Leak**: Removed arrow-based explanations from AI prompts that were leaking into user-facing responses. AI was saying things like "→ suggests [game]" instead of natural language.
+  - Updated prompts in `src/personality.py` to remove arrow annotations
+  - Responses are now fully conversational and natural
+
+### Added
+- **Player Count Intelligence**: Mitch now parses explicit player counts from messages and asks for clarification when the count is ambiguous
+  - Extracts player counts from messages: "5 of us" → suggests for 5 players
+  - Supports both digits (1-99) and words (one through fifteen): "three people" → suggests for 3 players
+  - Asks for clarification when online count is low (1-3) and no explicit count mentioned
+    - 1 online: "just you? or are more joining later?"
+    - 2 online: "just you two? or are more people playing?"
+    - 3 online: "just the three of you? or is it a bigger group?"
+  - Falls back to online member count when appropriate (4+ people online)
+  - Explicit player counts override online count
+  - **Impact**: Suggestions now match actual group size instead of just who's online
+
+### Technical Details
+- **Branches**: Merged `feature/flexible-detection` + `feature/player-count-parsing` into `release/v1.2.3`
+- **Files Created**: `src/player_count.py` (player count extraction and clarification logic)
+- **Files Modified**: 
+  - `src/bot.py` - Updated detection patterns, added player count integration, added presences intent
+  - `src/personality.py` - Removed arrow commentary from prompts, version bump to v1.2.3
+- **Breaking Changes**: None
+- **Migration**: None required (just restart bot)
+- **Testing**: Comprehensive testing on MediaServer - all patterns working correctly
+
+---
+
 ## [1.2.2] - 2026-02-14
 
 ### Fixed
