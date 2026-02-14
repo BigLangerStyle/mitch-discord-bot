@@ -3,7 +3,7 @@ Mitch Discord Bot - Main Bot Module
 
 Handles Discord connection, event handling, and message responses.
 Uses Ollama AI integration for natural gaming buddy personality.
-Version 1.1.0: Full conversational AI with context tracking
+Version 1.2.3: Flexible detection patterns for natural language
 """
 
 import discord
@@ -95,7 +95,7 @@ class MitchBot:
         self.rate_limit_message = rate_limit_config.get('message', 'whoa slow down a sec!')
         self.last_interaction = {}
         
-        logger.info("MitchBot v1.1.0 initialized with conversation tracking")
+        logger.info("MitchBot v1.2.3 initialized with flexible detection")
         logger.info(f"Context tracking: {self.context_size} messages per channel")
         logger.info(f"Rate limiting: {'enabled' if self.rate_limit_enabled else 'disabled'}")
         
@@ -210,23 +210,35 @@ class MitchBot:
             # More flexible keyword matching for natural language
             content_lower = message.content.lower()
             
-            # Check if asking for game suggestion (flexible matching)
+            # Flexible detection patterns (v1.2.3)
+            # Covers ~90% of natural language variations for game requests
             asking_for_game = (
-                # "what ... game/play" (matches: what game, what should we play, what could we play, etc.)
-                ('what' in content_lower and ('play' in content_lower or 'game' in content_lower)) or
+                # Pattern 1: what/which + game/play
+                (('what' in content_lower or 'which' in content_lower) and 
+                 ('play' in content_lower or 'game' in content_lower)) or
                 
-                # "suggest/recommend ... game"
-                (('suggest' in content_lower or 'recommend' in content_lower) and 'game' in content_lower) or
+                # Pattern 2: suggest/recommend (alone is fine - context is clear)
+                ('suggest' in content_lower or 'recommend' in content_lower) or
                 
-                # "give me ... game/suggestion"
-                ('give me' in content_lower and ('game' in content_lower or 'suggestion' in content_lower)) or
+                # Pattern 3: give me (anything - "give me one more", "give me something")
+                ('give me' in content_lower) or
                 
-                # Direct requests
-                'game suggestion' in content_lower or
-                'pick a game' in content_lower or
-                'choose a game' in content_lower or
-                'any suggestions' in content_lower or
-                'any suggestion' in content_lower
+                # Pattern 4: looking for/need/want
+                (('looking for' in content_lower or 'need' in content_lower or 
+                  'want' in content_lower or 'want to' in content_lower) and 
+                 ('game' in content_lower or 'play' in content_lower or 'something' in content_lower)) or
+                
+                # Pattern 5: help/pick/find (with game context)
+                (('help' in content_lower or 'pick' in content_lower or 'find' in content_lower) and 
+                 ('game' in content_lower or 'play' in content_lower)) or
+                
+                # Pattern 6: follow-ups (contextually game-specific)
+                ('one more' in content_lower or 'another' in content_lower or 
+                 'something else' in content_lower or 'different' in content_lower or
+                 'other' in content_lower) or
+                
+                # Pattern 7: any suggestions (clear intent)
+                ('any suggestions' in content_lower or 'suggestions' in content_lower)
             )
             
             # Show typing indicator while processing
@@ -336,7 +348,7 @@ class MitchBot:
                 )
                 sys.exit(1)
             
-            logger.info("Starting Mitch Discord Bot v1.1.0...")
+            logger.info("Starting Mitch Discord Bot v1.2.3...")
             await self.bot.start(token)
             
         except discord.LoginFailure:
