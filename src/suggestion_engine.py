@@ -335,6 +335,11 @@ class SuggestionEngine:
                 "when": when
             })
         
+        # Shuffle filtered games for variety
+        # This ensures different games are presented to the AI each time
+        shuffled_games = filtered_games.copy()
+        random.shuffle(shuffled_games)
+        
         context = {
             "player_count": player_count,
             "filtered_games": [
@@ -344,7 +349,7 @@ class SuggestionEngine:
                     "min_players": g['min_players'],
                     "max_players": g['max_players']
                 }
-                for g in filtered_games[:10]
+                for g in shuffled_games[:10]  # Random 10 games from filtered list
             ],
             "recent_plays": recent_summary,
             "requester": requester_name,

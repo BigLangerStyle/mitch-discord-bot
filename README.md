@@ -1,7 +1,7 @@
 # Mitch - Your Gaming Buddy Discord Bot
 
-**Version:** 1.0.0 ✅  
-**Status:** Production-Ready with Smart Suggestions
+**Version:** 1.1.0 ✅  
+**Status:** Production-Ready with Full Conversational AI
 
 ---
 
@@ -61,19 +61,34 @@ Mitch: how about Deep Rock Galactic? you guys haven't touched that in a while
 
 ---
 
-## Features (v1.0.0)
+## Features (v1.1.0)
 
+### ðŸŽ® Game Suggestions (v1.0.0)
 - ✅ **Smart Game Suggestions**: Combines AI reasoning with database knowledge
 - ✅ **Player Count Awareness**: Suggests games that fit your group size
 - ✅ **Cooldown System**: Avoids suggesting recently played games
 - ✅ **Game Library Database**: SQLite database for your game collection
 - ✅ **Play History Tracking**: Remembers what you've played recently
+
+### ðŸ'¬ Full Conversational AI (v1.1.0)
+- ✅ **Natural Conversations**: Talk to Mitch about anything, not just games
+- ✅ **Conversation Context**: Mitch remembers recent messages for natural flow
+- ✅ **Contextual Responses**: AI understands what you're talking about
+- ✅ **Casual Chat Support**: Greetings, thanks, questions all work naturally
+- ✅ **Optional Rate Limiting**: Prevent spam (configurable, off by default)
+
+### ðŸ¤– AI & Personality
 - ✅ **AI-Powered Responses**: Natural conversations using local Ollama (phi3:mini)
 - ✅ **Casual Personality**: Talks like a gaming buddy, not a corporate assistant
-- ✅ **Mention Detection**: Just @Mitch to get suggestions
 - ✅ **Lightweight**: CPU-only inference, runs on modest hardware
 - ✅ **Self-Hosted**: Your data stays on your server
 - ✅ **Graceful Fallbacks**: Works even if AI is slow or offline
+
+### ðŸš€ Technical
+- ✅ **Mention Detection**: Just @Mitch to interact
+- ✅ **Smart Routing**: Automatically detects game requests vs casual chat
+- ✅ **Production Ready**: systemd service, logging, error handling
+- ✅ **Memory Efficient**: Context tracking uses minimal RAM
 
 **Future Enhancements:**
 - Admin commands for game management (!addgame, !played)
@@ -137,6 +152,20 @@ Mitch: how about Deep Rock Galactic? you guys haven't touched that in a while
   - DEPLOYMENT.md guide for production deployment
   - CHANGELOG.md documenting version history
   - Final documentation polish
+
+**v1.0.1 (Bug Fix)** - ✅ Complete
+- Fixed suggestion detection to use flexible keyword matching
+- Improved natural language understanding for game requests
+- Resolved "what game" not triggering suggestions
+
+**v1.1.0 (Full Conversational AI)** - ✅ Complete
+- Added conversation context tracking (last 5 messages per channel)
+- Implemented casual_response() function for non-game chat
+- Added optional rate limiting to prevent spam
+- Enhanced personality system with conversation-aware prompts
+- Updated configuration with conversation and rate_limiting sections
+- All @mentions now route through AI for natural conversations
+- Game suggestion logic preserved and unchanged
 
 **Future Versions** - 📋 Planned
 - Admin commands (!addgame, !played)
