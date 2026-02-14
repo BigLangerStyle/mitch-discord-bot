@@ -5,6 +5,24 @@ All notable changes to Mitch Discord Bot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-02-14
+
+### Fixed
+- **Context Leakage in Casual Chat**: Conversation context was bleeding into casual responses, making Mitch sound like he was eavesdropping on group conversations. Updated AI prompt to only use context when directly relevant (e.g., acknowledging "thanks!") while ignoring unrelated chat history.
+  - Updated `CASUAL_SYSTEM_PROMPT` in `src/personality.py`
+  - Added explicit instructions to respond ONLY to the direct @mention
+  - Added rule to IGNORE unrelated conversation history
+  - Added examples of when context SHOULD be used (contextual "thanks!" acknowledgment)
+  - Preserves contextual acknowledgments for relevant responses
+  - Prevents incorporation of unrelated conversation history
+  - Casual @mentions now get direct, clean responses
+
+### Technical Details
+- **Type**: Prompt engineering fix (no code logic changes)
+- **Files Modified**: `src/personality.py`
+- **Breaking Changes**: None
+- **Migration**: None required (just restart bot)
+
 ## [1.2.0] - 2026-02-14
 
 ### Added - Documentation
