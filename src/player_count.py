@@ -6,6 +6,7 @@ clarification when counts are ambiguous.
 """
 
 import re
+from typing import Optional, Tuple
 
 # Word to number mapping (one through fifteen)
 # Covers most common casual chat usage
@@ -16,7 +17,7 @@ WORD_TO_NUM = {
 }
 
 
-def extract_player_count(message_content: str) -> int | None:
+def extract_player_count(message_content: str) -> Optional[int]:
     """
     Extract explicit player count from message if mentioned.
     
@@ -62,7 +63,7 @@ def extract_player_count(message_content: str) -> int | None:
     return None
 
 
-def should_ask_for_count(extracted_count: int | None, online_count: int) -> tuple[bool, int | None]:
+def should_ask_for_count(extracted_count: Optional[int], online_count: int) -> Tuple[bool, Optional[int]]:
     """
     Decide if we should ask for player count clarification.
     
