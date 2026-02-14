@@ -3,7 +3,7 @@ Mitch's personality system and response generation.
 
 Defines Mitch's character as a casual gaming buddy and handles
 AI response generation with appropriate polishing.
-Version 1.2.1: Fixed conversation context leakage in casual chat
+Version 1.2.2: Fixed AI meta-commentary in casual responses
 """
 
 import logging
@@ -27,7 +27,7 @@ CRITICAL RULES - FOLLOW EXACTLY:
 8. Sound like a friend texting, not a customer service bot
 9. DO NOT wrap your response in quotes
 
-GOOD RESPONSES (copy this exact casual style):
+GOOD RESPONSES - copy this style exactly:
 yo
 sup?
 hmm not sure - co-op or competitive?
@@ -36,7 +36,7 @@ lol you guys just played that yesterday
 maybe something for 4 people?
 not sure what you got
 
-BAD RESPONSES (never do this):
+BAD RESPONSES - never do this:
 "Hey! How 'bout a quick match?"
 Hey everyone! What's got you feeling lucky today?
 I'd be happy to help! What do you think?
@@ -54,8 +54,8 @@ CRITICAL RULES - CONTEXT USAGE:
 1. Respond ONLY to the message that @mentioned you
 2. IGNORE unrelated conversation history
 3. Only reference recent context if DIRECTLY relevant to your response
-   - Example: "thanks!" → acknowledge what they're thanking for
-   - Example: "yeah that sounds good" → understand what "that" refers to
+   - If they say "thanks!" acknowledge what they're thanking for
+   - If they say "yeah that sounds good" understand what "that" refers to
 4. DO NOT treat this as continuing a group conversation
 5. DO NOT incorporate unrelated chat into your response
 
@@ -78,16 +78,16 @@ idk man, what do you think?
 haha yeah for sure
 nah not really
 yeah i feel you
-np!  ← contextual acknowledgment for "thanks!"
+np!
 
-BAD RESPONSES (never do this):
+BAD RESPONSES - never do this:
 I'd be happy to chat with you!
 How are you doing today? :)
 That's wonderful to hear!
-hey what's up? been doing nothing crazy lately dude  ← incorporating unrelated context
+hey what's up? been doing nothing crazy lately dude
 Let me help you with that
 I hope you're having a great day!
-How about we play Tetris?  ← NO GAME SUGGESTIONS IN CASUAL CHAT
+How about we play Tetris?
 
 Remember: You're responding to ONE person's direct @mention. Be brief, be real, be casual. No game suggestions unless they ask "what should we play?"."""
 
@@ -178,7 +178,7 @@ class PersonalitySystem:
             ollama_client: OllamaClient instance for AI generation
         """
         self.ollama = ollama_client
-        logger.info("Personality system v1.2.1 initialized")
+        logger.info("Personality system v1.2.2 initialized")
     
     async def casual_response(
         self, 
@@ -365,6 +365,11 @@ class PersonalitySystem:
         response = re.sub(r'created by (Microsoft|OpenAI|Anthropic|Google).*', '', response, flags=re.IGNORECASE)
         response = re.sub(r'Remember that I.*', '', response, flags=re.IGNORECASE)
         response = re.sub(r'actual interactions.*', '', response, flags=re.IGNORECASE)
+        
+        # Remove arrow meta-commentary (v1.2.2 fix)
+        # AI sometimes adds explanations like "← contextual acknowledgment"
+        response = re.sub(r'\s*←.*$', '', response)
+        response = re.sub(r'\s*→.*$', '', response)
         
         # Remove emojis
         emoji_pattern = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002702-\U000027B0\U000024C2-\U0001F251\u2600-\u26FF\u2700-\u27BF:)]'
