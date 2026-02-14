@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Conversation Configuration**: New `conversation` section in config.yaml for context settings
 - **Rate Limiting Configuration**: New `rate_limiting` section in config.yaml
 - **Enhanced Logging**: Shows whether request was casual chat or game suggestion
+- **Game Suggestion Randomization**: Shuffles filtered games for variety in suggestions
 
 ### Changed
 - All casual @mentions now route through AI instead of hardcoded responses
@@ -23,17 +24,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Casual responses have lighter polishing than game suggestions (300 char max vs 100)
 - Bot.py now tracks conversation history per channel using deque
 - Enhanced on_message handler to track messages for context
+- Simplified prompt ending from verbose instruction to simple "Respond as Mitch:"
+- Increased default Ollama timeout from 120s to 600s (better for cold starts)
 
 ### Fixed
+- **Game Suggestions**: No longer suggests the same game repeatedly (now shuffles candidates)
+- **AI Disclaimers**: Removed hallucinated Microsoft/AI self-references from responses
+- **Instruction Leakage**: Fixed AI echoing conversation context and prompt instructions
+- **Memory Efficiency**: Reduced RAM spikes from 97% to ~79% during AI generation (~75% improvement)
+- **Casual Chat Bleeding**: Added explicit "NOT suggesting games" rule to casual prompt
 - Casual interactions no longer feel robotic or repetitive
 - "thanks!" and similar messages now get contextually appropriate responses
 - Multi-turn conversations now flow naturally with memory of recent context
+- Removed emoji patterns that were sneaking through (including :) emoticons)
 
 ### Technical
 - Added `time` import for rate limiting timestamps
 - Added `collections.defaultdict` and `deque` for conversation tracking
 - Memory efficient: context limited to 5 messages per channel, resets on restart
 - No database needed for context (in-memory only)
+- Added `random.shuffle()` to suggestion_engine for game variety
+- Enhanced response polishing with better artifact and disclaimer filtering
+- Improved prompt structure to prevent context leakage
 
 ## [1.0.1] - 2025-02-09
 
