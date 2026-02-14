@@ -3,7 +3,7 @@ Mitch Discord Bot - Main Bot Module
 
 Handles Discord connection, event handling, and message responses.
 Uses Ollama AI integration for natural gaming buddy personality.
-Version 1.2.3: Flexible detection patterns for natural language
+Version 1.1.0: Full conversational AI with context tracking
 """
 
 import discord
@@ -19,6 +19,7 @@ from ollama_client import OllamaClient
 from personality import PersonalitySystem
 from game_tracker import GameTracker
 from suggestion_engine import SuggestionEngine
+from player_count import extract_player_count, should_ask_for_count, get_clarification_message
 
 # Load configuration first
 config = load_config()
@@ -95,7 +96,7 @@ class MitchBot:
         self.rate_limit_message = rate_limit_config.get('message', 'whoa slow down a sec!')
         self.last_interaction = {}
         
-        logger.info("MitchBot v1.2.3 initialized with flexible detection")
+        logger.info("MitchBot v1.1.0 initialized with conversation tracking")
         logger.info(f"Context tracking: {self.context_size} messages per channel")
         logger.info(f"Rate limiting: {'enabled' if self.rate_limit_enabled else 'disabled'}")
         
@@ -210,35 +211,23 @@ class MitchBot:
             # More flexible keyword matching for natural language
             content_lower = message.content.lower()
             
-            # Flexible detection patterns (v1.2.3)
-            # Covers ~90% of natural language variations for game requests
+            # Check if asking for game suggestion (flexible matching)
             asking_for_game = (
-                # Pattern 1: what/which + game/play
-                (('what' in content_lower or 'which' in content_lower) and 
-                 ('play' in content_lower or 'game' in content_lower)) or
+                # "what ... game/play" (matches: what game, what should we play, what could we play, etc.)
+                ('what' in content_lower and ('play' in content_lower or 'game' in content_lower)) or
                 
-                # Pattern 2: suggest/recommend (alone is fine - context is clear)
-                ('suggest' in content_lower or 'recommend' in content_lower) or
+                # "suggest/recommend ... game"
+                (('suggest' in content_lower or 'recommend' in content_lower) and 'game' in content_lower) or
                 
-                # Pattern 3: give me (anything - "give me one more", "give me something")
-                ('give me' in content_lower) or
+                # "give me ... game/suggestion"
+                ('give me' in content_lower and ('game' in content_lower or 'suggestion' in content_lower)) or
                 
-                # Pattern 4: looking for/need/want
-                (('looking for' in content_lower or 'need' in content_lower or 
-                  'want' in content_lower or 'want to' in content_lower) and 
-                 ('game' in content_lower or 'play' in content_lower or 'something' in content_lower)) or
-                
-                # Pattern 5: help/pick/find (with game context)
-                (('help' in content_lower or 'pick' in content_lower or 'find' in content_lower) and 
-                 ('game' in content_lower or 'play' in content_lower)) or
-                
-                # Pattern 6: follow-ups (contextually game-specific)
-                ('one more' in content_lower or 'another' in content_lower or 
-                 'something else' in content_lower or 'different' in content_lower or
-                 'other' in content_lower) or
-                
-                # Pattern 7: any suggestions (clear intent)
-                ('any suggestions' in content_lower or 'suggestions' in content_lower)
+                # Direct requests
+                'game suggestion' in content_lower or
+                'pick a game' in content_lower or
+                'choose a game' in content_lower or
+                'any suggestions' in content_lower or
+                'any suggestion' in content_lower
             )
             
             # Show typing indicator while processing
@@ -249,9 +238,30 @@ class MitchBot:
                 if asking_for_game:
                     logger.info(f"✓ Detected game suggestion request: '{message.content}'")
                     
-                    # Estimate player count from server context
-                    player_count = self._estimate_player_count(message)
+                    # Extract explicit player count from message
+                    extracted_count = extract_player_count(message.content)
                     
+                    # Count online members for fallback/clarification logic
+                    try:
+                        online_members = [
+                            m for m in message.guild.members 
+                            if m.status != discord.Status.offline and not m.bot
+                        ]
+                        online_count = len(online_members)
+                    except Exception:
+                        online_count = 4  # Safe default
+                    
+                    # Decide if we need to ask for clarification
+                    should_ask, player_count = should_ask_for_count(extracted_count, online_count)
+                    
+                    if should_ask:
+                        # Send clarification question instead of suggesting
+                        clarification = get_clarification_message(online_count)
+                        logger.info(f"Asking for clarification: {online_count} online, no explicit count")
+                        await message.channel.send(clarification)
+                        return
+                    
+                    # We have a clear player count - generate suggestion
                     logger.info(f"Generating suggestion for {player_count} players")
                     start_time = asyncio.get_event_loop().time()
                     
@@ -301,10 +311,10 @@ class MitchBot:
     
     def _estimate_player_count(self, message) -> int:
         """
-        Estimate player count from server context.
+        Estimate player count from message content and server context.
         
-        For now, just count online members in the server.
-        Future: could check voice channels, parse message, etc.
+        First tries to extract explicit player count from message (e.g., "5 of us").
+        If no explicit count, uses online member count as fallback.
         
         Args:
             message: Discord message object
@@ -313,7 +323,18 @@ class MitchBot:
             int: Estimated player count (default to 4 if uncertain)
         """
         try:
-            # Count online members (excluding bots)
+            # First, try to extract explicit player count from message
+            extracted_count = extract_player_count(message.content)
+            
+            if extracted_count is not None:
+                logger.info(f"✓ Extracted explicit player count: {extracted_count}")
+                # Clamp to reasonable range
+                if extracted_count > 10:
+                    logger.info(f"Clamping {extracted_count} to max of 10 players")
+                    return 10
+                return extracted_count
+            
+            # No explicit count - count online members (excluding bots)
             online_members = [
                 m for m in message.guild.members 
                 if m.status != discord.Status.offline and not m.bot
@@ -327,7 +348,7 @@ class MitchBot:
                 count = 10  # Cap at max game size
                 
             logger.info(
-                f"Estimated {count} players from "
+                f"Using online member count: {count} players from "
                 f"{len(online_members)} online members"
             )
             return count
@@ -348,7 +369,7 @@ class MitchBot:
                 )
                 sys.exit(1)
             
-            logger.info("Starting Mitch Discord Bot v1.2.3...")
+            logger.info("Starting Mitch Discord Bot v1.1.0...")
             await self.bot.start(token)
             
         except discord.LoginFailure:
