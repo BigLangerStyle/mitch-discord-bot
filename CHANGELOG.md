@@ -1,18 +1,32 @@
 # Changelog
 
-All notable changes to Mitch Discord Bot will be documented in this file.
+All notable changes to the Mitch Discord Bot project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.2.2] - 2026-02-14
+
+### Fixed
+- **Suggestion Variety**: Removed implicit bias toward Deep Rock Galactic in AI prompts. Prompt examples were showing DRG twice, causing the AI to favor it in suggestions. Changed to generic placeholders to ensure fair game variety.
+  - Updated suggestion prompt in `src/suggestion_engine.py`
+  - Investigation confirmed filtering/cooldown/randomization working correctly
+  - Simple one-line prompt fix resolved the issue
+
+### Investigation
+- Investigated Deep Rock Galactic appearing too frequently in suggestions
+- Root cause: Prompt engineering bias (DRG mentioned in examples twice)
+- Not a filtering, database, or cooldown issue - all working correctly
+
+---
 
 ## [1.2.1] - 2026-02-14
 
 ### Fixed
 - **Context Leakage in Casual Chat**: Conversation context was bleeding into casual responses, making Mitch sound like he was eavesdropping on group conversations. Updated AI prompt to only use context when directly relevant (e.g., acknowledging "thanks!") while ignoring unrelated chat history.
   - Updated `CASUAL_SYSTEM_PROMPT` in `src/personality.py`
-  - Added explicit instructions to respond ONLY to the direct @mention
-  - Added rule to IGNORE unrelated conversation history
-  - Added examples of when context SHOULD be used (contextual "thanks!" acknowledgment)
   - Preserves contextual acknowledgments for relevant responses
   - Prevents incorporation of unrelated conversation history
   - Casual @mentions now get direct, clean responses
@@ -23,183 +37,254 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking Changes**: None
 - **Migration**: None required (just restart bot)
 
+---
+
 ## [1.2.0] - 2026-02-14
 
-### Added - Documentation
-- **docs/ARCHITECTURE.md**: Comprehensive component architecture documentation
-  - High-level component overview with ASCII diagrams
-  - Detailed explanation of each component (bot, personality, suggestion_engine, etc.)
-  - Data flow diagrams for casual chat and game suggestions
-  - Complete database schema with examples and relationships
-  - Error handling strategy and fallback hierarchy
-  - Performance considerations for modest hardware
-  - Technology choices explained (Python, Ollama, SQLite, discord.py)
-  - Future architecture planning
-  
-- **docs/TROUBLESHOOTING.md**: Complete troubleshooting guide
-  - Quick diagnostics commands
-  - Bot connection issues (token, permissions, intents)
-  - Ollama/AI issues (timeouts, model not found, weird responses)
-  - Database issues (locked, corrupted, empty library)
-  - Game suggestion problems (cooldown, filtering, randomness)
-  - Performance issues (memory, slow responses)
-  - Deployment issues (systemd service problems)
-  - Log analysis guide with specific grep commands
-  - "Getting Help" section with what information to provide
-  
-- **docs/CONFIGURATION.md**: Detailed configuration reference
-  - Every config option explained with type, default, recommended range
-  - "WHY CHANGE" guidance for each setting
-  - When/how to change settings based on use case
-  - Examples and common values for different scenarios
-  - Impact on performance and behavior
-  - Five complete configuration examples (small group, public server, slow hardware, fast hardware, testing)
-  - Validation commands and common config errors
-  - Quick reference table
+### Added
+- **Comprehensive Documentation** (~3,500 lines of professional documentation)
+  - `docs/ARCHITECTURE.md` - Complete system architecture, component overview, data flows
+  - `docs/TROUBLESHOOTING.md` - Common issues with diagnostic commands and solutions
+  - `docs/CONFIGURATION.md` - Deep-dive on every config option with tuning guidance
+  - `UNINSTALL.md` - Complete uninstallation guide
 
-### Changed - Documentation
-- **docs/DEVELOPMENT.md**: Complete rewrite from v0.1.0 placeholder
-  - Development environment setup (prerequisites, installation, configuration)
-  - Complete project structure with file-by-file explanations
-  - Git workflow and branching strategy
-  - Code style guidelines (PEP 8, comments, error handling, async/await)
-  - Testing guide (component tests, interactive scripts, manual Discord testing)
-  - Debugging techniques (debug mode, database inspection, Ollama testing)
-  - Adding new features (examples: new database tables, admin commands)
-  - Common development tasks (adding games, clearing history, personality tuning)
-  - Performance optimization tips
-  - Troubleshooting development issues
-  
-- **docs/mitch.service**: Enhanced systemd service file
-  - Comprehensive inline comments explaining every setting
-  - Hardware-specific tuning notes (MediaServer i3-3225)
-  - Security hardening explanations
-  - Resource limit reasoning (CPU, memory)
-  - Clear instructions on what to change for your setup
-  
-- **config/config.yaml.example**: Enhanced configuration template
-  - Updated version to 1.2.0
-  - Added reference to docs/CONFIGURATION.md
-  - Added "WHY CHANGE" guidance for every section
-  - Tuning guides based on use case (library size, hardware, server type)
-  - Examples of alternative values
-  - Ollama section: Model alternatives, temperature tuning, timeout guidance
-  - Suggestions section: Cooldown tuning by library size
-  - Conversation section: Context message tuning by server activity
-  - Rate limiting section: When to enable/disable
-  
-- **README.md**: Updated to v1.2.0
-  - Added v1.2.0 release status
-  - Updated status line to reflect professional documentation
+### Changed
+- **Enhanced Existing Documentation**
+  - `docs/DEVELOPMENT.md` - Complete rewrite from v0.1.0 placeholder (~550 lines)
+  - `docs/mitch.service` - Added comprehensive inline comments for all settings
+  - `config/config.yaml.example` - Enhanced with "WHY CHANGE" guidance throughout
+  - `README.md` - Updated to v1.2.0
+  - `CHANGELOG.md` - Comprehensive formatting and organization
 
 ### Documentation Improvements
-- All documentation now professional and portfolio-ready
-- Easy for new contributors to understand and modify project
-- Comprehensive troubleshooting reduces support requests
-- Every config option has clear explanation and tuning guidance
-- Architecture clearly explained for maintainability
+- Portfolio-ready quality documentation
+- Self-service troubleshooting capabilities
+- Contributor-friendly onboarding
+- Complete configuration reference
+- Hardware-specific tuning notes for MediaServer
 
-### Technical
-- No code changes in v1.2.0 (documentation-only release)
-- Created SCRIPT_HEADERS.md with templates for Python script docstrings
-- Total new documentation: ~3,500 lines across 6 files
+### Technical Details
+- **Type**: Documentation-only release (no code changes)
+- **Files Modified**: 9 documentation files (4 new, 5 enhanced)
+- **Breaking Changes**: None
+- **Migration**: None required
 
-## [1.1.0] - 2025-02-13
+---
+
+## [1.1.0] - 2026-02-13
 
 ### Added
-- **Full Conversational AI**: Mitch now handles ALL @mentions with AI, not just game suggestions
-- **Conversation Context Tracking**: Remembers last 5 messages per channel for natural conversation flow
-- **`casual_response()` function**: New method in PersonalitySystem for handling casual chat
-- **Rate Limiting**: Optional spam prevention (configurable, disabled by default)
-- **Conversation Configuration**: New `conversation` section in config.yaml for context settings
-- **Rate Limiting Configuration**: New `rate_limiting` section in config.yaml
-- **Enhanced Logging**: Shows whether request was casual chat or game suggestion
-- **Game Suggestion Randomization**: Shuffles filtered games for variety in suggestions
+- **Full Conversational AI**: All @mentions now route through AI for natural conversations
+  - `casual_response()` function for general chat interactions
+  - Smart routing: detects game requests vs casual conversation
+  - Conversation context tracking (last 5 messages per channel)
+  - Natural contextual responses ("thanks!" → acknowledges what they're thanking for)
+
+- **Optional Rate Limiting**
+  - Configurable spam prevention (disabled by default)
+  - Per-user cooldown between @mentions
+  - Perfect for small friend groups
 
 ### Changed
-- All casual @mentions now route through AI instead of hardcoded responses
-- Conversation context passed to AI for more natural, contextual responses
-- Updated personality prompts to handle both casual chat and game suggestions
-- Casual responses have lighter polishing than game suggestions (300 char max vs 100)
-- Bot.py now tracks conversation history per channel using deque
-- Enhanced on_message handler to track messages for context
-- Simplified prompt ending from verbose instruction to simple "Respond as Mitch:"
-- Increased default Ollama timeout from 120s to 600s (better for cold starts)
+- **Game Suggestion Variety**: Shuffles filtered games before presenting to AI
+  - Prevents "Deep Rock Galactic every time" syndrome
+  - `random.shuffle()` in `suggestion_engine.py`
+
+- **Enhanced Response Quality**
+  - Removes AI disclaimers and self-references
+  - Filters out hallucinated company attributions
+  - Prevents instruction leakage from prompts
+  - Better immersion in casual gaming buddy role
+
+- **Configuration Updates**
+  - New `conversation` section (context_messages, casual_max_length)
+  - New `rate_limiting` section (enabled, cooldown_seconds, message)
+  - Increased default timeout to 600s for better cold-start handling
 
 ### Fixed
-- **Game Suggestions**: No longer suggests the same game repeatedly (now shuffles candidates)
-- **AI Disclaimers**: Removed hallucinated Microsoft/AI self-references from responses
-- **Instruction Leakage**: Fixed AI echoing conversation context and prompt instructions
-- **Memory Efficiency**: Reduced RAM spikes from 97% to ~79% during AI generation (~75% improvement)
-- **Casual Chat Bleeding**: Added explicit "NOT suggesting games" rule to casual prompt
-- Casual interactions no longer feel robotic or repetitive
-- "thanks!" and similar messages now get contextually appropriate responses
-- Multi-turn conversations now flow naturally with memory of recent context
-- Removed emoji patterns that were sneaking through (including :) emoticons)
+- **Memory Optimization** ⭐ HUGE WIN
+  - Reduced RAM spikes from 97% → ~79% during AI generation
+  - ~75% reduction in memory spike (2GB → 0.5GB)
+  - HomeSentry alerts eliminated completely
+  - Achieved through cleaner prompts and better Ollama caching
 
-### Technical
-- Added `time` import for rate limiting timestamps
-- Added `collections.defaultdict` and `deque` for conversation tracking
-- Memory efficient: context limited to 5 messages per channel, resets on restart
-- No database needed for context (in-memory only)
-- Added `random.shuffle()` to suggestion_engine for game variety
-- Enhanced response polishing with better artifact and disclaimer filtering
-- Improved prompt structure to prevent context leakage
+- **Casual Chat Not Suggesting Games**
+  - Added explicit "NOT suggesting games" rule to casual prompt
+  - Prevents "say something funny" → "how about Tetris?" responses
+  - Clear separation between chat modes
 
-## [1.0.1] - 2025-02-09
+### Technical Details
+- **Files Modified**: `src/bot.py`, `src/personality.py`, `src/suggestion_engine.py`, `config/config.yaml.example`
+- **New Features**: Conversation tracking, rate limiting (optional)
+- **Performance**: Significant memory optimization
+- **Breaking Changes**: None (backwards compatible)
+
+---
+
+## [1.0.1] - 2026-02-09
 
 ### Fixed
-- Fixed suggestion detection to use flexible keyword matching
-- "what game" now properly triggers suggestion engine (was falling through to casual chat)
-- Improved natural language understanding for game request detection
+- **Critical: Suggestion Detection**: Core feature was broken - users asking for game suggestions were being treated as casual conversation
+  - "what game could we play?" → Now correctly detected as suggestion request ✓
+  - "give me a good co-op game" → Now correctly detected as suggestion request ✓
+  - "any suggestions?" → Now correctly detected as suggestion request ✓
 
 ### Changed
-- Suggestion detection now uses flexible `'what' in content AND ('game' OR 'play')` logic
-- More permissive keyword matching allows natural phrasing
+- **Flexible Trigger Detection**: Changed from exact phrase matching to keyword combinations
+  - Now matches: ('what' + 'play/game'), ('suggest/recommend' + 'game'), ('give me' + 'game/suggestion'), 'any suggestions'
+  - More natural language understanding
+  - Reduced false negatives
 
-## [1.0.0] - 2025-02-08
+- **Clearer AI Prompts**: AI explicitly instructed to list specific game names
+  - AI now provides concrete game suggestions instead of vague responses
+  - Better instruction clarity prevents "hey peeps" type responses
 
-### Added
-- Smart game suggestion engine combining database + AI
-- SQLite database with games, play_history, and suggestions tables
-- Player count detection from online members
-- Cooldown system (48 hours) to avoid repetitive suggestions
-- Game library population script (scripts/setup_games.py)
-- Ollama integration with phi3:mini model
-- Personality system with casual gaming buddy character
-- AI response polishing to maintain casual tone
-- Graceful fallbacks when AI is unavailable
-- Production-ready systemd service
-- Comprehensive testing utilities
-- Health check script for monitoring
+- **Better Logging**: Added debug output for suggestion detection
+  - "✓ Detected game suggestion request"
+  - Shows filtered games list
+  - Tracks suggestion generation timing
 
-### Documentation
-- README.md with full project overview
-- QUICKSTART.md for easy setup
-- DEPLOYMENT.md for production deployment
-- DATABASE.md explaining schema
-- SUGGESTIONS.md explaining suggestion logic
+### Technical Details
+- **Branch**: `fix/suggestion-detection`
+- **Files Modified**: `src/bot.py`, `src/suggestion_engine.py`, `CHANGELOG.md`
+- **Type**: Critical bug fix
+- **Impact**: Restores primary bot functionality
 
-## [0.2.0] - 2025-01-28
+---
+
+## [1.0.0] - 2026-02-08
 
 ### Added
-- Discord bot core with mention detection
-- Configuration system with YAML support
-- Rotating file logging
-- SystemD service for deployment
-- Hardcoded casual responses (replaced in v1.0.0)
+- **Ollama Integration & AI Personality**
+  - `src/ollama_client.py` - HTTP client for local Ollama API
+  - `src/personality.py` - Gaming buddy personality with casual tone
+  - Two-tier response polishing (light for chat, strict for suggestions)
+  - Fallback responses when AI unavailable
 
-## [0.1.0] - 2025-01-25
+- **Database & Game Tracking**
+  - `src/game_tracker.py` - SQLite database operations
+  - Complete schema: games, play_history, suggestions tables
+  - Foreign keys with CASCADE/SET NULL
+  - Performance indexes and WAL mode
+  - `scripts/setup_games.py` - Game library management
+  - Populated with 10 actual games
+
+- **Smart Suggestions Logic**
+  - `src/suggestion_engine.py` - AI + database suggestion system
+  - Player count detection from online members
+  - Game filtering by player count + 48h cooldown
+  - Recent suggestion tracking (5 min cooldown)
+  - Context-aware AI responses
+  - Database recording for analytics
+
+- **Production Polish & Testing**
+  - Enhanced test suite (11 comprehensive tests)
+  - Production health monitoring (`scripts/health_check.py`)
+  - Production-ready systemd service with resource limits
+  - Complete deployment guide (`docs/DEPLOYMENT.md`)
+  - Full version history (CHANGELOG.md)
+
+### Changed
+- **Updated from v0.2.0 hardcoded responses** to full AI-powered system
+- Integrated Ollama (phi3:mini) for all bot responses
+- Added comprehensive database for game tracking
+- Production deployment with systemd service
+
+### Technical Details
+- **Branch**: Multiple feature branches merged to `release/v1.0.0`
+- **Files Created**: 8 new modules, 6 new scripts, 3 new docs
+- **Testing**: All 11 component tests passing on MediaServer
+- **Python**: 3.8.10 compatibility verified
+- **Performance**: 3-20s AI responses (acceptable for hardware)
+
+---
+
+## [0.2.0] - 2026-02-08
 
 ### Added
-- Initial project structure
-- Repository setup
-- Project documentation framework
-- Git workflow established
+- **Discord Bot Skeleton**
+  - `src/bot.py` - Main bot with event handlers (on_ready, on_message)
+  - @mention detection
+  - Hardcoded casual responses (5 variations)
+  - Typing indicators
+  - Clean shutdown handling
 
-[1.2.0]: https://github.com/yourusername/mitch-discord-bot/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/yourusername/mitch-discord-bot/compare/v1.0.1...v1.1.0
-[1.0.1]: https://github.com/yourusername/mitch-discord-bot/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/yourusername/mitch-discord-bot/compare/v0.2.0...v1.0.0
-[0.2.0]: https://github.com/yourusername/mitch-discord-bot/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/yourusername/mitch-discord-bot/releases/tag/v0.1.0
+- **Configuration & Logging Foundation**
+  - `src/config_loader.py` - YAML config loading and validation
+  - `src/logger.py` - Rotating file handler
+  - `src/utils.py` - Error handling utilities
+  - Comprehensive unit tests (13 tests, all passing)
+
+- **Database Foundation**
+  - `src/game_tracker.py` - SQLite schema creation
+  - Empty schema ready for v1.0.0 implementation
+
+- **Deployment & Documentation**
+  - `docs/mitch.service` - systemd service file
+  - `QUICKSTART.md` - Comprehensive setup guide
+  - `scripts/test_components.py` - Testing utility (7 validation checks)
+  - `run.sh` - Startup script
+  - `.gitignore` - Secrets management
+
+### Changed
+- **Updated README.md** to mark v0.2.0 as complete
+- **Updated CONTRIBUTING.md** with AI-assisted workflow
+- **Updated requirements.txt** to support Python 3.13+
+
+### Technical Details
+- **Branch**: Multiple feature branches merged to `release/v0.2.0`
+- **Testing**: Local (Windows Python 3.14.3), MediaServer (Linux Mint Python 3.8.10)
+- **Deployment**: Successfully tested on MediaServer
+- **Migration**: Python 3.9 venv setup on MediaServer
+
+---
+
+## [0.1.0] - 2026-02-07
+
+### Added
+- **Initial Repository Structure**
+  - Directory layout (src/, config/, docs/, scripts/, tests/)
+  - Core documentation (README.md, CONTRIBUTING.md, QUICKSTART.md placeholder)
+  - `.agent/project-preferences.md` - Workflow documentation
+  - `.agent/claude_workflow.md` - AI-assisted development patterns
+  - `.gitignore`, LICENSE (MIT), requirements.txt
+  - `config/config.yaml.example` template
+
+- **Documentation**
+  - Project vision and purpose
+  - Target audience (small gaming groups)
+  - Tech stack overview
+  - Contribution guidelines
+  - GitHub setup guide
+
+### Technical Details
+- **Type**: Repository structure only (no implementation)
+- **Purpose**: Professional foundation for development
+- **Files**: 16 placeholder and documentation files
+
+---
+
+## Future Versions
+
+Potential enhancements for consideration:
+
+### Possible v1.3.0+ Features
+- Admin commands (!addgame, !played, !games, !stats)
+- Voice channel detection (auto-detect who's in voice)
+- Reaction-based tracking (✅ to mark game as played)
+- Steam library integration
+- Statistics dashboard
+- Team Captain personality enhancement (90s lifeguard hero vibe)
+
+### Under Consideration
+- Multi-server support
+- Natural language game search
+- Machine learning for preference learning
+- Advanced analytics and reporting
+
+---
+
+**Note**: Version numbering follows [Semantic Versioning](https://semver.org/):
+- **Major version** (x.0.0): Breaking changes or major features
+- **Minor version** (0.x.0): New features, backwards compatible
+- **Patch version** (0.0.x): Bug fixes, backwards compatible
