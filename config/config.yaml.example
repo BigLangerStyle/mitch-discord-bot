@@ -1,10 +1,12 @@
 # Mitch Discord Bot - Configuration Template
-# Version: 1.1.0
+# Version: 1.2.0
 # 
 # INSTRUCTIONS:
-# 1. Copy this file to config/config.yaml
+# 1. Copy this file to config/config.yaml:
+#    cp config/config.yaml.example config/config.yaml
 # 2. Fill in your actual values (Discord token, server ID, etc.)
 # 3. NEVER commit config.yaml to Git (it's in .gitignore)
+# 4. See docs/CONFIGURATION.md for detailed explanation of every option
 
 # ===================================
 # Discord Configuration
@@ -30,21 +32,34 @@ discord:
 # ===================================
 ollama:
   # Ollama API endpoint (usually localhost if running locally)
+  # WHY CHANGE: If running Ollama on different machine or custom port
+  # Example: "http://192.168.1.100:11434" for remote Ollama
   host: "http://localhost:11434"
   
   # Model to use for responses
-  # Recommended: phi3:mini (lightweight, good for gaming chat)
-  # Alternatives: llama2, mistral, codellama
+  # Recommended: phi3:mini (2.3GB, fast, good for gaming chat)
+  # WHY CHANGE: Want better quality (try mistral), or have faster hardware
+  # Alternatives: llama2 (3.8GB), mistral (4.1GB), codellama (3.8GB)
+  # BEFORE CHANGING: Run `ollama pull <model>` first!
   model: "phi3:mini"
   
   # Temperature (0.0 = deterministic, 1.0 = creative)
   # 0.8 is a good balance for casual conversation
+  # WHY CHANGE: Responses too repetitive? Increase to 0.9
+  #             Responses too random? Decrease to 0.6
   temperature: 0.8
   
-  # Maximum tokens in response (keep responses concise)
+  # Maximum tokens in response (~4 chars per token)
+  # 300 tokens ≈ 1200 characters ≈ 2-3 sentences
+  # WHY CHANGE: Faster hardware → increase to 500 for more detail
+  #             Slower hardware → decrease to 200 to save time/memory
   max_tokens: 300
   
   # Request timeout in seconds
+  # MediaServer (i3-3225): 60s handles cold starts (first request after idle)
+  # WHY CHANGE: Faster CPU → reduce to 30s
+  #             Older/slower CPU → increase to 120s
+  #             Getting frequent timeouts → increase by 30s increments
   timeout: 60
 
 # ===================================
@@ -84,16 +99,32 @@ logging:
 # Game Suggestion Settings
 # ===================================
 suggestions:
-  # How many recent plays to consider when avoiding repetition
+  # How many recent plays to consider when building suggestions
+  # Shows AI recent context: "you played DRG 5 days ago"
+  # WHY CHANGE: Want more history context → 14 days
+  #             Want less history context → 3 days
   recent_plays_window: 7
   
   # Minimum time (in hours) before suggesting same game again
+  # Prevents repetitive suggestions
+  # TUNING GUIDE:
+  #   Small library (< 10 games):  24-36 hours
+  #   Medium library (10-20):      48 hours (default)
+  #   Large library (30+ games):   72-96 hours
+  # WHY CHANGE: Getting same game too often → increase
+  #             Want more variety faster → decrease
   cooldown_hours: 48
   
   # Maximum number of suggestions to provide
+  # 1 = Bot decides for you ("play DRG")
+  # 3 = Gives options ("DRG, Valheim, or Phasmophobia?")
+  # WHY CHANGE: Group hates choices → set to 1
+  #             Want more options → set to 5
   max_suggestions: 3
   
   # Include player count in context
+  # When true: Only suggests games that support current player count
+  # WHY CHANGE: Only disable for testing or manual control
   use_player_count: true
 
 # ===================================
@@ -113,33 +144,59 @@ personality:
   max_response_length: 500
 
 # ===================================
-# Conversation Settings (v1.1.0)
+# Conversation Settings (v1.1.0+)
 # ===================================
 conversation:
   # Number of recent messages to include as context
-  # Keeps conversation flow natural and contextual
+  # Keeps conversation flow natural ("that game you mentioned earlier")
+  # Memory impact: ~500 bytes per message × context_messages × active channels
+  # WHY CHANGE: Busy server with noise → reduce to 3
+  #             Want better conversation awareness → increase to 7
+  #             Limited RAM → reduce to 3
   context_messages: 5
   
   # Maximum response length for casual chat (characters)
   # Shorter than suggestions to keep chat snappy
+  # WHY CHANGE: Want very brief responses → 200
+  #             Want more detailed chat → 400
   casual_max_length: 300
   
   # Use light response polishing for casual chat
-  # (strict polishing is still used for game suggestions)
+  # Light: Removes corporate language, excessive punctuation (fast)
+  # Strict: Also removes emojis, fixes caps (slower, cleaner)
+  # WHY CHANGE: Debugging personality → set to false for raw AI
+  #             Otherwise keep true for best results
   casual_light_polish: true
 
 # ===================================
-# Rate Limiting (v1.1.0)
+# Rate Limiting (v1.1.0+)
 # ===================================
 rate_limiting:
   # Enable rate limiting to prevent spam
-  # Recommended: false for small friend groups, true for larger servers
+  # WHEN TO ENABLE:
+  #   - Public server with strangers
+  #   - Friends spamming bot for fun
+  #   - Want to reduce Ollama load
+  # WHEN TO DISABLE (default):
+  #   - Small friend group (5-15 people) you trust
+  #   - Want maximum responsiveness
+  # WHY CHANGE: Getting spammed → enable
+  #             Trust your users → disable
   enabled: false
   
   # Minimum seconds between @mentions per user
+  # User gets "slow down" message if they @mention too fast
+  # TUNING:
+  #   3s = Light protection, barely noticeable
+  #   5s = Balanced (default)
+  #   10s = Strict, might frustrate users
+  # WHY CHANGE: Users complaining → reduce to 3
+  #             Still getting spam → increase to 10
   cooldown_seconds: 5
   
   # Message to send when rate limited
+  # Keep it casual and friendly, matches Mitch's personality
+  # WHY CHANGE: Want different tone → customize message
   message: "whoa slow down a sec!"
 
 # ===================================

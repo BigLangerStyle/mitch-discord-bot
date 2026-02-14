@@ -1,7 +1,7 @@
 # Mitch - Your Gaming Buddy Discord Bot
 
-**Version:** 1.1.0 ✅  
-**Status:** Production-Ready with Full Conversational AI
+**Version:** 1.2.0 ✅  
+**Status:** Production-Ready with Professional Documentation
 
 ---
 
@@ -166,6 +166,16 @@ Mitch: how about Deep Rock Galactic? you guys haven't touched that in a while
 - Updated configuration with conversation and rate_limiting sections
 - All @mentions now route through AI for natural conversations
 - Game suggestion logic preserved and unchanged
+
+**v1.2.0 (Documentation & Polish)** - ✅ Complete
+- Created comprehensive ARCHITECTURE.md (component overview, data flow)
+- Created detailed TROUBLESHOOTING.md (common issues & solutions)
+- Created complete CONFIGURATION.md (every config option explained)
+- Completely rewrote DEVELOPMENT.md (from placeholder to full guide)
+- Enhanced mitch.service with inline comments
+- Improved config.yaml.example with "WHY CHANGE" guidance
+- Professional, portfolio-ready documentation
+- Easy for contributors to understand project
 
 **Future Versions** - 📋 Planned
 - Admin commands (!addgame, !played)
@@ -461,6 +471,17 @@ ollama pull phi3:mini
 - Normal on slower CPUs (3-15 seconds is expected)
 - Increase timeout in config if needed
 - MediaServer: Expect 5-20s for suggestions
+
+---
+
+## Uninstalling
+
+**Need to remove Mitch?** See [UNINSTALL.md](UNINSTALL.md) for complete removal instructions, including:
+- Stopping the service
+- Removing bot files
+- Optional: Removing Ollama
+- Keeping database backups
+- Partial removal scenarios
 
 ---
 

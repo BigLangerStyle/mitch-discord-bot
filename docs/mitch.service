@@ -1,43 +1,119 @@
 [Unit]
+# Service description shown in systemctl status
 Description=Mitch Discord Bot - Gaming Buddy
+
+# Wait for network and Ollama before starting
+# network-online.target ensures network is fully up
+# ollama.service ensures local AI is available
 After=network-online.target ollama.service
+
+# Prefers network to be online, but will start without it if needed
 Wants=network-online.target
+
+# Bot REQUIRES Ollama - won't start if Ollama isn't running
+# If you want bot to start without Ollama (with fallback responses), change to Wants=
 Requires=ollama.service
 
 [Service]
+# Simple service type - one main process
 Type=simple
+
+# User and group to run as
+# IMPORTANT: Change these to your actual username!
+# Find yours with: id
 User=plexor
 Group=plexor
+
+# Project directory - bot runs from here
+# IMPORTANT: Update this path to match your installation!
 WorkingDirectory=/home/plexor/git/mitch-discord-bot
 
-# Environment
+# Environment variables
+# PATH includes venv/bin so Python finds dependencies
+# Add other environment vars here if needed (e.g., API keys for future features)
 Environment="PATH=/home/plexor/git/mitch-discord-bot/venv/bin:/usr/local/bin:/usr/bin:/bin"
 
-# Start command
+# Start command - runs bot.py using venv Python
+# IMPORTANT: Update path to match your installation!
 ExecStart=/home/plexor/git/mitch-discord-bot/venv/bin/python3 src/bot.py
 
-# Restart policy - only restart on failures, not on normal exit
+# Restart policy
+# on-failure: Only restart if bot crashes (exit code != 0)
+# Does NOT restart on normal shutdown (systemctl stop, Ctrl+C)
 Restart=on-failure
+
+# Wait 10 seconds between restart attempts
+# Prevents rapid restart loops if something is fundamentally broken
 RestartSec=10
+
+# Restart rate limiting
+# If bot fails 3 times within 5 minutes, give up
+# Prevents infinite restart loop if config is broken
 StartLimitInterval=5min
 StartLimitBurst=3
 
-# Resource limits - appropriate for MediaServer (i3-3225, 8GB RAM, shared system)
+# Resource limits
+# These are tuned for MediaServer (i3-3225, 8GB RAM, shared system)
+# Adjust based on your hardware
+
+# CPU limit: Bot can use max 25% of one CPU core
+# 25% is enough for phi3:mini inference on modest hardware
+# Increase to 50% if you have CPU to spare
+# Decrease to 10% if system is heavily loaded
 CPUQuota=25%
+
+# Memory limits
+# MemoryMax: Hard limit - bot killed if exceeded (2GB)
+# MemoryHigh: Soft limit - kernel applies pressure at this point (1.5GB)
+# 
+# Normal usage: ~50-100MB baseline
+# During AI inference: ~600MB spike (79% of 8GB total on MediaServer)
+# 2GB max provides safety margin
+#
+# Adjust if needed:
+# - More RAM available: Increase to 4G
+# - Less RAM available: Decrease to 1G (may cause OOM during AI)
 MemoryMax=2G
 MemoryHigh=1.5G
 
 # Logging
+# StandardOutput=journal: Send stdout to systemd journal
+# StandardError=journal: Send stderr to systemd journal
+# SyslogIdentifier=mitch: Tag all logs as "mitch" for easy filtering
+#
+# View logs with: sudo journalctl -u mitch -f
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=mitch
 
 # Security hardening (optional but recommended)
+# These settings reduce attack surface if bot is compromised
+
+# NoNewPrivileges: Prevent privilege escalation
+# Bot can't gain new privileges (e.g., via setuid binaries)
 NoNewPrivileges=true
+
+# PrivateTmp: Give bot its own /tmp directory
+# Isolates temporary files from other processes
 PrivateTmp=true
+
+# ProtectSystem: Make system directories read-only
+# strict: /usr, /boot, /etc all read-only
+# Bot can only write to paths listed in ReadWritePaths
 ProtectSystem=strict
+
+# ProtectHome: Hide other users' home directories
+# Bot can't access /home/other-user
+# Only sees its own WorkingDirectory
 ProtectHome=true
+
+# ReadWritePaths: Exceptions to ProtectSystem
+# Bot needs write access to data/ for database and logs
+# Update this path if you change WorkingDirectory
 ReadWritePaths=/home/plexor/git/mitch-discord-bot/data
 
 [Install]
+# When to start this service
+# multi-user.target: Start during normal boot (after network, before GUI)
+# Equivalent to "runlevel 3" in old SysV init
 WantedBy=multi-user.target
