@@ -19,6 +19,7 @@ from ollama_client import OllamaClient
 from personality import PersonalitySystem
 from game_tracker import GameTracker
 from suggestion_engine import SuggestionEngine
+from player_count import extract_player_count, should_ask_for_count, get_clarification_message
 
 # Load configuration first
 config = load_config()
@@ -53,6 +54,7 @@ intents.message_content = True  # Required to read message content
 intents.guilds = True
 intents.guild_messages = True
 intents.members = True  # Required to see server members
+intents.presences = True  # Required to see member online/offline status
 
 # Create bot client
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -237,9 +239,36 @@ class MitchBot:
                 if asking_for_game:
                     logger.info(f"✓ Detected game suggestion request: '{message.content}'")
                     
-                    # Estimate player count from server context
-                    player_count = self._estimate_player_count(message)
+                    # Extract explicit player count from message
+                    extracted_count = extract_player_count(message.content)
                     
+                    # Count online members for fallback/clarification logic
+                    try:
+                        online_members = [
+                            m for m in message.guild.members 
+                            if m.status != discord.Status.offline and not m.bot
+                        ]
+                        online_count = len(online_members)
+                        
+                        logger.info(
+                            f"Counted {online_count} online members "
+                            f"(total guild members: {len(message.guild.members)})"
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to count online members: {e}")
+                        online_count = 4  # Safe default
+                    
+                    # Decide if we need to ask for clarification
+                    should_ask, player_count = should_ask_for_count(extracted_count, online_count)
+                    
+                    if should_ask:
+                        # Send clarification question instead of suggesting
+                        clarification = get_clarification_message(online_count)
+                        logger.info(f"Asking for clarification: {online_count} online, no explicit count")
+                        await message.channel.send(clarification)
+                        return
+                    
+                    # We have a clear player count - generate suggestion
                     logger.info(f"Generating suggestion for {player_count} players")
                     start_time = asyncio.get_event_loop().time()
                     
@@ -289,10 +318,10 @@ class MitchBot:
     
     def _estimate_player_count(self, message) -> int:
         """
-        Estimate player count from server context.
+        Estimate player count from message content and server context.
         
-        For now, just count online members in the server.
-        Future: could check voice channels, parse message, etc.
+        First tries to extract explicit player count from message (e.g., "5 of us").
+        If no explicit count, uses online member count as fallback.
         
         Args:
             message: Discord message object
@@ -301,7 +330,18 @@ class MitchBot:
             int: Estimated player count (default to 4 if uncertain)
         """
         try:
-            # Count online members (excluding bots)
+            # First, try to extract explicit player count from message
+            extracted_count = extract_player_count(message.content)
+            
+            if extracted_count is not None:
+                logger.info(f"✓ Extracted explicit player count: {extracted_count}")
+                # Clamp to reasonable range
+                if extracted_count > 10:
+                    logger.info(f"Clamping {extracted_count} to max of 10 players")
+                    return 10
+                return extracted_count
+            
+            # No explicit count - count online members (excluding bots)
             online_members = [
                 m for m in message.guild.members 
                 if m.status != discord.Status.offline and not m.bot
@@ -315,7 +355,7 @@ class MitchBot:
                 count = 10  # Cap at max game size
                 
             logger.info(
-                f"Estimated {count} players from "
+                f"Using online member count: {count} players from "
                 f"{len(online_members)} online members"
             )
             return count
