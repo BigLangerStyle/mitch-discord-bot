@@ -404,11 +404,11 @@ YOUR JOB: Pick 1-2 games from the AVAILABLE GAMES list above. Say the actual gam
 
 Be brief and casual. Under 200 chars. No formal language.
 
-GOOD examples:
-"how about Deep Rock Galactic?"
-"maybe Phasmophobia or Lethal Company"
-"Deep Rock's been a while, that could be fun"
-"try Valheim - haven't played that in a bit"
+GOOD examples (use actual game names from the list):
+"how about [game name]?"
+"maybe [game] or [game]"
+"[game]'s been a while, that could be fun"
+"try [game] - haven't played that in a bit"
 
 BAD examples (NEVER do this):
 "I'd recommend..."
