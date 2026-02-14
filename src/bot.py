@@ -54,6 +54,7 @@ intents.message_content = True  # Required to read message content
 intents.guilds = True
 intents.guild_messages = True
 intents.members = True  # Required to see server members
+intents.presences = True  # Required to see member online/offline status
 
 # Create bot client
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -248,7 +249,13 @@ class MitchBot:
                             if m.status != discord.Status.offline and not m.bot
                         ]
                         online_count = len(online_members)
-                    except Exception:
+                        
+                        logger.info(
+                            f"Counted {online_count} online members "
+                            f"(total guild members: {len(message.guild.members)})"
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to count online members: {e}")
                         online_count = 4  # Safe default
                     
                     # Decide if we need to ask for clarification
