@@ -234,17 +234,14 @@ class PersonalitySystem:
             context_str = "\n".join(context_parts) if context_parts else "No recent context"
             
             # Format Team Captain casual prompt
-            system_prompt = CASUAL_SYSTEM_PROMPT.format(
+            # Combine system prompt + user message into single prompt
+            full_prompt = CASUAL_SYSTEM_PROMPT.format(
                 context=context_str,
                 message=f"{requester_name}: {user_message}"
             )
             
             # Generate response
-            raw_response = await self.ollama.generate(
-                prompt=user_message,
-                system_prompt=system_prompt,
-                max_tokens=100  # Keep casual responses brief
-            )
+            raw_response = await self.ollama.generate(prompt=full_prompt)
             
             # Polish with light filtering (preserve context)
             polished = self._polish_response(raw_response, strict=False)
@@ -279,11 +276,7 @@ class PersonalitySystem:
                 # Use Team Captain suggestion prompt
                 logger.info("Generating Team Captain game suggestion")
                 prompt = self._build_team_captain_suggestion_prompt(context)
-                raw_response = await self.ollama.generate(
-                    prompt="",  # Prompt is in system_prompt for suggestions
-                    system_prompt=prompt,
-                    max_tokens=150
-                )
+                raw_response = await self.ollama.generate(prompt=prompt)
                 polished = self._polish_response(raw_response, strict=True)
                 
                 # Verify not too formal
