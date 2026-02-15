@@ -25,6 +25,7 @@ Before you begin, make sure you have:
 6. Scroll down to **"Privileged Gateway Intents"** and enable:
    - ✅ **Server Members Intent**
    - ✅ **Message Content Intent**
+   - ✅ **Presence Intent**
 7. Click **"Save Changes"**
 
 ### Get Your Server (Guild) ID
@@ -229,6 +230,7 @@ This will check:
 **Fix:**
 - Make sure you enabled **Message Content Intent** in the Developer Portal
 - Make sure you enabled **Server Members Intent**
+- Make sure you enabled **Presence Intent** (required for detecting online members)
 - Wait a few minutes after enabling intents (Discord can be slow)
 - Restart the bot: `sudo systemctl restart mitch` (or `Ctrl+C` and re-run `./run.sh`)
 

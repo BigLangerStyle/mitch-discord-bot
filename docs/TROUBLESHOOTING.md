@@ -56,18 +56,26 @@ sudo systemctl status mitch && echo "--- Recent Logs ---" && sudo journalctl -u 
 
 **Possible Causes & Solutions:**
 
-#### 1. **Message Content Intent Not Enabled**
+#### 1. **Privileged Gateway Intents Not Enabled**
 
-The bot needs permission to read message content.
+The bot needs three privileged intents to function properly.
 
 **How to fix:**
 1. Go to https://discord.com/developers/applications
 2. Select your application
 3. Go to "Bot" section
 4. Scroll to "Privileged Gateway Intents"
-5. Enable **"Message Content Intent"**
+5. Enable all three:
+   - ✅ **Message Content Intent** (required to read messages)
+   - ✅ **Server Members Intent** (required to see who's in the server)
+   - ✅ **Presence Intent** (required to see who's online/offline)
 6. Click "Save Changes"
 7. Restart bot: `sudo systemctl restart mitch`
+
+**Why each intent is needed:**
+- **Message Content Intent**: Bot can't read message text without this
+- **Server Members Intent**: Bot can't count players without this
+- **Presence Intent**: Bot can't tell who's online without this (will show "0 online")
 
 **How to verify:**
 ```bash

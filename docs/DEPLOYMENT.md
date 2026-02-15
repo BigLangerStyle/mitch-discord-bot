@@ -25,7 +25,10 @@ Complete guide for deploying Mitch Discord Bot to a production Linux server.
   - Read Messages/View Channels
   - Send Messages
   - Read Message History
-- **Message Content Intent** enabled in Developer Portal
+- **Privileged Gateway Intents** enabled in Developer Portal:
+  - **Message Content Intent**
+  - **Server Members Intent**
+  - **Presence Intent**
 
 ---
 
@@ -462,7 +465,9 @@ sudo systemctl restart mitch
 
 4. **Check Discord permissions:**
    - Bot has Read/Send Messages permissions
-   - Message Content Intent enabled
+   - **Message Content Intent** enabled in Developer Portal
+   - **Server Members Intent** enabled in Developer Portal
+   - **Presence Intent** enabled in Developer Portal
    - Bot role is above any restrictive roles
 
 5. **Test with @mention:**
@@ -749,7 +754,7 @@ Before declaring production-ready:
 
 3. **"Bot not responding in Discord"**
    - Check: `systemctl status mitch`
-   - Verify: Message Content Intent enabled
+   - Verify: Message Content Intent, Server Members Intent, and Presence Intent enabled in Developer Portal
 
 4. **"Need to add games"**
    - Run: `python3 scripts/setup_games.py populate`
