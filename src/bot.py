@@ -3,7 +3,7 @@ Mitch Discord Bot - Main Bot Module
 
 Handles Discord connection, event handling, and message responses.
 Uses Ollama AI integration for natural gaming buddy personality.
-Version 1.1.0: Full conversational AI with context tracking
+Version 1.2.4: Full conversational AI with context tracking + health endpoint
 """
 
 import discord
@@ -20,6 +20,7 @@ from personality import PersonalitySystem
 from game_tracker import GameTracker
 from suggestion_engine import SuggestionEngine
 from player_count import extract_player_count, should_ask_for_count, get_clarification_message
+from health_server import HealthServer
 
 # Load configuration first
 config = load_config()
@@ -82,6 +83,9 @@ class MitchBot:
             config=config
         )
         
+        # Initialize health monitoring server (v1.2.4)
+        self.health_server = HealthServer(self.bot, ollama_client, config)
+        
         # Conversation context tracking (v1.1.0)
         # Maps channel_id -> deque of recent messages
         # Format: {"author": "Username", "content": "message text"}
@@ -97,7 +101,7 @@ class MitchBot:
         self.rate_limit_message = rate_limit_config.get('message', 'whoa slow down a sec!')
         self.last_interaction = {}
         
-        logger.info("MitchBot v1.1.0 initialized with conversation tracking")
+        logger.info("MitchBot v1.2.4 initialized with conversation tracking and health endpoint")
         logger.info(f"Context tracking: {self.context_size} messages per channel")
         logger.info(f"Rate limiting: {'enabled' if self.rate_limit_enabled else 'disabled'}")
         
@@ -376,7 +380,7 @@ class MitchBot:
                 )
                 sys.exit(1)
             
-            logger.info("Starting Mitch Discord Bot v1.1.0...")
+            logger.info("Starting Mitch Discord Bot v1.2.4...")
             await self.bot.start(token)
             
         except discord.LoginFailure:
@@ -412,10 +416,12 @@ async def main():
     signal.signal(signal.SIGTERM, signal_handler)
     
     try:
+        await mitch.health_server.start()
         await mitch.start()
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received")
     finally:
+        await mitch.health_server.stop()
         await mitch.stop()
 
 
