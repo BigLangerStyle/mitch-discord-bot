@@ -245,6 +245,23 @@ performance:
   max_concurrent_ai_requests: 2
 
 # ===================================
+# Health Monitoring Endpoint (v1.2.4)
+# ===================================
+health:
+  # Enable HTTP health endpoint for external monitoring (e.g., HomeSentry)
+  # Responds at http://localhost:8001/health with JSON status
+  # WHY CHANGE: Don't need external monitoring → set to false
+  enabled: true
+  
+  # Host to bind to - localhost only, no external network access
+  # WHY CHANGE: Only change if you know what you're doing
+  host: "127.0.0.1"
+  
+  # Port for health endpoint
+  # WHY CHANGE: Port 8001 already in use → pick another (e.g., 8080)
+  port: 8001
+
+# ===================================
 # Development Settings
 # ===================================
 development:
