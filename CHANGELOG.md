@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.4] - 2026-02-15
+
+### Added
+- **Health Monitoring Endpoint**: HTTP endpoint for external monitoring systems
+  - Endpoint: `http://localhost:8001/health` (localhost only)
+  - Returns JSON: bot status, uptime, Discord connection, Ollama responsiveness, DB size, memory usage
+  - Designed for HomeSentry integration
+  - Configurable via `health:` section in config.yaml (enabled, host, port)
+  - Auto-starts with bot, graceful shutdown on exit
+  - Uses existing `OllamaClient.health_check()` — no duplicate ping logic
+
+### Technical Details
+- **New File**: `src/health_server.py`
+- **Modified**: `src/bot.py` (health server init + start/stop in main)
+- **Modified**: `config/config.yaml.example` (new `health:` section)
+- **Dependencies**: `aiohttp` (already installed via discord.py)
+- **Security**: Binds to 127.0.0.1 only — not accessible from network
+- **Breaking Changes**: None
+- **Migration**: None required (health endpoint auto-starts, opt-out via `health.enabled: false`)
+
+---
+
 ## [1.2.3] - 2026-02-14
 
 ### Fixed
